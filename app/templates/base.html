@@ -125,6 +125,9 @@
     'no_summary': t('no_summary'), 'new_items': t('new_items'), 'empty': t('empty'),
     'updated_never': t('updated_never'), 'tags': tag_labels|default({}),
     'share': t('share'), 'link_copied': t('link_copied'), 'story_page': t('story_page'),
+    'share_image': t('share_image'), 'share_image_label': t('share_image_label'), 'image_saved': t('image_saved'),
+    'image_making': t('image_making'), 'n_sources_img': t('n_sources'), 'home_url': site_url ~ url('/'),
+    'image_js': '/static/js/share-image.js?v=' ~ v,
     'story_base': site_url ~ url('/story/')
   }|tojson }}</script>
   <script src="/static/js/vendor/gsap.min.js?v={{ v }}" defer></script>

@@ -8,7 +8,13 @@
     <p data-reveal>{{ t('digest_intro') }} <a href="{{ '/digest.xml' if lang == 'en' else '/sq/digest.xml' }}">RSS</a></p>
     {% for d in digests %}
     <section class="digest__day" id="d-{{ d.day }}" data-reveal>
-      <h2><time datetime="{{ d.day }}">{{ d.day }}</time></h2>
+      <div class="digest__head">
+        <h2><time datetime="{{ d.day }}">{{ d.day }}</time></h2>
+        <button class="card__share share-img" type="button" hidden aria-label="{{ t('share_image_label') }}"
+          data-title="{{ t('digest_latest') }}" data-name="digest-{{ d.day }}"
+          data-kicker="{{ t('digest_title') }} · {{ d.day[8:10] }}.{{ d.day[5:7] }}.{{ d.day[:4] }}"
+          data-points="{{ d.points|map(attribute=lang)|list|tojson|forceescape }}" data-url="{{ site_url }}{{ url('/digest') }}">{{ t('share_image') }}</button>
+      </div>
       <ol class="digest__points">
         {% for p in d.points %}
         <li>{{ p[lang] }}

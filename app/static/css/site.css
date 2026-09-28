@@ -410,6 +410,7 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
   color: var(--text); font-size: .78rem; font-weight: 600; padding: .3rem .75rem; min-height: 32px; cursor: pointer;
 }
 .card__share:hover { border-color: var(--pink); color: var(--pink); }
+.card__share[disabled] { opacity: .5; cursor: progress; }
 .toast {
   position: fixed; left: 50%; bottom: 1.5rem; z-index: 96; transform: translate(-50%, 150%);
   background: var(--text); color: var(--bg); font-weight: 600; padding: .6rem 1.1rem; border-radius: 999px;
@@ -444,7 +445,8 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 .story__sum { color: #D8D8D2; font-size: .92rem; }
 .story__list time { color: var(--muted); font-size: .78rem; }
 .digest__day { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1.5rem; }
-.digest__day h2 { font: 400 1.6rem/1.1 var(--display); color: var(--pink); margin: 0 0 .6rem; }
+.digest__day h2 { font: 400 1.6rem/1.1 var(--display); color: var(--pink); margin: 0; }
+.digest__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 .6rem; }
 .digest__points { padding-left: 1.2rem; }
 .digest__points li { margin-bottom: .7rem; }
 .digest__refs { display: block; color: var(--muted); font-size: .8rem; margin-top: .15rem; }

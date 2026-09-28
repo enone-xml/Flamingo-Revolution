@@ -309,6 +309,37 @@
   });
   showShare();
 
+  // "Image": build a picture of the story/digest on the device (script loaded on first use).
+  let imageLib = null;
+  function loadImageLib() {
+    if (!imageLib) imageLib = new Promise((resolve, reject) => {
+      const s = h("script", { src: I18N.image_js });
+      s.onload = () => resolve(window.FlamingoImage); s.onerror = reject;
+      document.head.append(s);
+    });
+    return imageLib;
+  }
+  const showImageButtons = (root = document) => {
+    if (window.HTMLCanvasElement && window.Path2D) $$(".share-img", root).forEach((b) => { b.hidden = false; });
+  };
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest(".share-img");
+    if (!b) return;
+    e.preventDefault();
+    if (b.disabled) return;
+    b.disabled = true; toast(I18N.image_making);
+    try {
+      const lib = await loadImageLib();
+      const d = { ...b.dataset };
+      if (d.points) d.points = JSON.parse(d.points);
+      const result = await lib.shareImage(d);
+      if (result === "downloaded") toast(I18N.image_saved);
+      else $(".toast") && $(".toast").classList.remove("is-on");
+    } catch (err) { console.warn("image failed", err); }
+    finally { b.disabled = false; }
+  });
+  showImageButtons();
+
   // ------------------------------------------------------------ feed
   const cards = $(".cards");
   if (!cards) { refreshTimes(); return; }
@@ -346,7 +377,12 @@
           g.slug ? h("a", { class: "card__story", href: I18N.story_base + g.slug }, I18N.story_page + " →") : null,
           h("a", { class: "card__read", href: a.url, rel: "noopener", target: "_blank" }, fmt(I18N.read_original, { source: a.source }) + " ", h("span", { "aria-hidden": "true" }, "↗")),
           h("button", { class: "card__share share", type: "button", hidden: !canShare,
-            "data-share-url": g.slug ? I18N.story_base + g.slug : a.url, "data-share-title": a.title }, I18N.share))),
+            "data-share-url": g.slug ? I18N.story_base + g.slug : a.url, "data-share-title": a.title }, I18N.share),
+          h("button", { class: "card__share share-img", type: "button", hidden: !(window.HTMLCanvasElement && window.Path2D),
+            "aria-label": I18N.share_image_label, "data-title": a.title, "data-summary": a.summary || "",
+            "data-name": g.slug || String(a.id),
+            "data-kicker": `${a.published_at.slice(8, 10)}.${a.published_at.slice(5, 7)}.${a.published_at.slice(0, 4)} · ${count > 1 ? fmt(I18N.n_sources_img, { n: count }) : a.source}`,
+            "data-sources": g.sources.join(" · "), "data-url": g.slug ? I18N.story_base + g.slug : I18N.home_url }, I18N.share_image))),
     );
     if (g.articles.length > 1) {
       const id = `grp-${g.max_id}`;

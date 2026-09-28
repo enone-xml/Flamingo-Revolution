@@ -15,6 +15,10 @@
       {% if g.slug %}<a class="card__story" href="{{ url('/story/' ~ g.slug) }}">{{ t('story_page') }} →</a>{% endif %}
       <a class="card__read" href="{{ a.url }}" rel="noopener" target="_blank">{{ t('read_original', source=a.source) }} <span aria-hidden="true">↗</span></a>
       <button class="card__share share" type="button" hidden data-share-url="{% if g.slug %}{{ site_url }}{{ url('/story/' ~ g.slug) }}{% else %}{{ a.url }}{% endif %}" data-share-title="{{ a.title }}">{{ t('share') }}</button>
+      <button class="card__share share-img" type="button" hidden aria-label="{{ t('share_image_label') }}"
+        data-title="{{ a.title }}" data-summary="{{ a.summary or '' }}" data-name="{{ g.slug or a.id }}"
+        data-kicker="{{ a.published_at[8:10] }}.{{ a.published_at[5:7] }}.{{ a.published_at[:4] }} · {% if g.sources|length > 1 %}{{ t('n_sources', n=g.sources|length) }}{% else %}{{ a.source }}{% endif %}"
+        data-sources="{{ g.sources|join(' · ') }}" data-url="{% if g.slug %}{{ site_url }}{{ url('/story/' ~ g.slug) }}{% else %}{{ site_url }}{{ url('/') }}{% endif %}">{{ t('share_image') }}</button>
     </span>
   </div>
   {% if g.articles|length > 1 %}
