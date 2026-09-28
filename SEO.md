@@ -20,7 +20,8 @@ What the site already does for search engines:
 3. Google shows a **TXT record** (`google-site-verification=...`). In Cloudflare go to
    **flamingo-watch.com → DNS → Records → Add record**, set Type **TXT**, Name **@**, and paste the value as the content. Save.
 4. Back in Search Console, click **Verify**. It can take a few minutes.
-5. Go to **Sitemaps**, enter `sitemap.xml`, and click **Submit**.
+5. Go to **Sitemaps**, enter the full address `https://flamingo-watch.com/sitemap.xml`, and click **Submit**.
+   (A Domain property needs the full URL; just `sitemap.xml` gives "Please enter a valid path".)
 6. Go to **URL inspection**, paste `https://flamingo-watch.com/`, and click **Request indexing**. Do the same for `/sq/`.
 
 ### 2. Bing Webmaster Tools (Bing, DuckDuckGo, Yahoo, ChatGPT search)
