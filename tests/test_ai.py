@@ -163,3 +163,21 @@ def test_catch_up_failures_keep_headline_and_stop_retrying(tmp_path):
     with db.session(path) as conn:
         row = conn.execute("SELECT ai_status, ai_attempts FROM articles").fetchone()
     assert (row["ai_status"], row["ai_attempts"]) == ("keyword_only", 3)
+
+
+def test_missing_summary_is_retried_once(tmp_path):
+    class Flaky:
+        calls = 0
+
+        def call(self, prompt):
+            Flaky.calls += 1
+            first = Flaky.calls == 1
+            return ({"relevant": True, "title_en": "T", "title_sq": "T", "summary_en": "English.",
+                     "summary_sq": "" if first else "Shqip.", "tags": ["protests"], "story_key": "x-y"}, 700, 100)
+
+    path = str(tmp_path / "t.db")
+    add_articles(path, 1)
+    ai.process_pending(path, backend=Flaky())
+    with db.session(path) as conn:
+        row = conn.execute("SELECT summary_sq FROM articles").fetchone()
+    assert Flaky.calls == 2 and row["summary_sq"] == "Shqip."
