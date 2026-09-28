@@ -572,6 +572,101 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
   .card--featured .card__title { font-size: 1.5rem; }
 }
 
+/* ---------------------------------------------------------------- RnB / BnB */
+.rnb__satire { display: inline-block; margin: 0 0 2rem; padding: .35rem .7rem; border: 1px dashed var(--pink-dim); color: var(--muted); font-size: .85rem; }
+.rnb__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); }
+.rnb__side { padding: clamp(.75rem, 3vw, 2rem); min-width: 0; }
+.rnb__side + .rnb__side { border-left: 1px solid var(--line); }
+.rnb__sign { margin: 0 0 .5rem; font: 400 clamp(2.6rem, 11vw, 6rem)/.9 var(--display); color: var(--pink); letter-spacing: .02em; }
+.rnb__side--berisha .rnb__sign { color: var(--green); }
+.rnb__name { display: block; margin-top: .35rem; font: 600 .8rem/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rnb__cell { display: block; width: 100%; max-width: 340px; height: auto; margin: .5rem auto 1rem; overflow: visible; }
+.rnb__cell path, .rnb__cell circle, .rnb__cell rect { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.c-wall { fill: var(--card) !important; }
+.c-line { stroke: var(--line); stroke-width: 3; }
+.c-thin { stroke-width: 2; }
+.c-fig { stroke: var(--text); stroke-width: 3.5; }
+.c-fig .c-hair { fill: var(--text) !important; }
+.rnb__side--rama { --accent: var(--pink); }
+.rnb__side--berisha { --accent: var(--green); }
+.sec { display: none; }
+.sec.on { display: inline; }
+.sec-1 path, .sec-2 path { stroke: #8C8C86; stroke-width: 5; }
+.sec-2 .c-door { fill: rgba(10, 10, 10, .35) !important; stroke: #8C8C86; stroke-width: 4; }
+.c-shackle { stroke: #C9C9C2; stroke-width: 5; }
+.c-lock { fill: var(--accent) !important; stroke: var(--bg); stroke-width: 2; }
+.c-hole { fill: var(--bg) !important; }
+.c-chain { stroke: #C9C9C2; stroke-width: 7; stroke-dasharray: 10 6; }
+.c-bar { stroke: #6E6E68; stroke-width: 10; }
+.c-bolt { fill: #C9C9C2 !important; stroke: var(--bg); stroke-width: 2; }
+.c-beam { fill: color-mix(in srgb, var(--accent) 16%, transparent) !important; stroke: none; }
+.c-cam { fill: #3A3A36 !important; stroke: #8C8C86; stroke-width: 2; }
+.c-rec { fill: #FF3B30 !important; }
+.c-guard { stroke: var(--accent); stroke-width: 3; }
+.c-cap { fill: var(--accent) !important; }
+.c-vault { fill: #4A4A45 !important; stroke: #8C8C86; stroke-width: 4; }
+.c-wheel { stroke: #C9C9C2; stroke-width: 5; }
+.rnb__count { margin: 0; display: flex; flex-direction: column; }
+.rnb__num { font: 400 clamp(3rem, 12vw, 6.5rem)/1 var(--display); color: var(--accent); font-variant-numeric: tabular-nums; }
+.rnb__label { color: var(--muted); font-size: .85rem; }
+.rnb__week { margin: .4rem 0 .9rem; font-weight: 600; font-size: .9rem; }
+.rnb__meter { display: block; width: 100%; height: 6px; border: 0; background: var(--line); appearance: none; -webkit-appearance: none; }
+.rnb__meter::-webkit-progress-bar { background: var(--line); }
+.rnb__meter::-webkit-progress-value { background: var(--accent); transition: width 1.2s var(--ease); }
+.rnb__meter::-moz-progress-bar { background: var(--accent); }
+.rnb__level { margin: .5rem 0 1.4rem; color: var(--muted); font-size: .8rem; }
+.rnb__latest-title { margin: 0 0 .5rem; font: 600 .75rem/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rnb__latest { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.rnb__latest li { padding: .55rem 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.rnb__latest a { color: var(--text); text-decoration-color: var(--accent); }
+.rnb__src { display: block; margin-top: .2rem; color: var(--muted); font-size: .75rem; }
+.rnb__none { color: var(--muted); }
+.rnb__about { margin-top: 2.5rem; }
+.rnb__levels { padding-left: 1.4rem; }
+.rnb__levels strong { display: inline-block; min-width: 3ch; color: var(--pink); }
+.rnb__checked { color: var(--muted); font-size: .85rem; }
+
+/* the build-up: site.js-free, driven by rnbbnb.js adding .play */
+.motion .c-fig { animation: rnb-idle 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes rnb-idle { 50% { transform: scaleY(.985) translateY(1px); } }
+.sec.play path, .sec.play rect, .sec.play circle { transform-box: fill-box; }
+.sec-1.play path { transform-origin: 50% 0; animation: rnb-drop .45s var(--ease) both; }
+.sec-1.play path:nth-child(2) { animation-delay: 45ms; }
+.sec-1.play path:nth-child(3) { animation-delay: 90ms; }
+.sec-1.play path:nth-child(4) { animation-delay: 135ms; }
+.sec-1.play path:nth-child(5) { animation-delay: 180ms; }
+.sec-1.play path:nth-child(6) { animation-delay: 225ms; }
+.sec-1.play path:nth-child(7) { animation-delay: 270ms; }
+.sec-1.play path:nth-child(8) { animation-delay: 315ms; }
+@keyframes rnb-drop { from { transform: scaleY(0); } }
+.sec-2.play { animation: rnb-slam .55s cubic-bezier(.5, 0, .75, 0) both; }
+@keyframes rnb-slam { from { transform: translateX(-160px); opacity: 0; } 80% { transform: translateX(6px); opacity: 1; } }
+.sec-3.play { transform-box: fill-box; transform-origin: 50% 0; animation: rnb-swing .9s var(--ease) both; }
+@keyframes rnb-swing { 0% { transform: translateY(-40px) rotate(-35deg); opacity: 0; } 50% { transform: rotate(18deg); opacity: 1; } 75% { transform: rotate(-8deg); } }
+.sec-4.play .c-chain { stroke-dasharray: 10 6; animation: rnb-chain .8s var(--ease) both; }
+.sec-4.play .c-chain + .c-chain { animation-delay: .25s; }
+@keyframes rnb-chain { from { opacity: 0; transform: scale(.2); } }
+.sec-5.play .c-bar { transform-origin: 0 50%; animation: rnb-slide .5s var(--ease) both; }
+.sec-5.play .c-bolt { transform-origin: 50% 50%; animation: rnb-pop .35s cubic-bezier(.3, 1.8, .5, 1) both; animation-delay: .4s; }
+.sec-5.play .c-bolt:nth-of-type(odd) { animation-delay: .55s; }
+@keyframes rnb-slide { from { transform: scaleX(0); } }
+@keyframes rnb-pop { from { transform: scale(0); } }
+.sec-6.play { animation: rnb-fade .6s ease both; }
+.motion .sec-6.on .c-beam { animation: rnb-sweep 4s ease-in-out infinite; transform-box: view-box; transform-origin: 262px 30px; }
+.motion .sec-6.on .c-rec { animation: rnb-blink 1.2s steps(1) infinite; }
+@keyframes rnb-fade { from { opacity: 0; } }
+@keyframes rnb-sweep { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(8deg); } }
+@keyframes rnb-blink { 50% { opacity: 0; } }
+.sec-7.play { animation: rnb-march .9s var(--ease) both; }
+@keyframes rnb-march { from { transform: translateX(60px); opacity: 0; } }
+.sec-8.play { animation: rnb-vault .7s cubic-bezier(.6, 0, .9, .4) both; }
+.sec-8.play .c-wheel { transform-box: fill-box; transform-origin: 50% 50%; animation: rnb-spin 1s .7s var(--ease) both; }
+@keyframes rnb-vault { from { transform: translateY(-340px); } }
+@keyframes rnb-spin { from { transform: rotate(-180deg); } }
+.rnb__cell.shake { animation: rnb-shake .3s linear; }
+@keyframes rnb-shake { 25% { transform: translate(-3px, 1px); } 50% { transform: translate(3px, -1px); } 75% { transform: translate(-2px, 0); } }
+.rnb__num.bump { animation: rnb-pop .5s cubic-bezier(.3, 1.8, .5, 1); }
+
 /* ---------------------------------------------------------------- reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -583,6 +678,7 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
   .topbar.is-hidden { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+@media (prefers-reduced-motion: reduce) { .rnb__cell *, .rnb__cell.shake, .rnb__num.bump { animation: none !important; } }
 
 /* ---------------------------------------------------------------- page transitions (native) */
 /* Browsers with cross-document View Transitions animate between pages themselves;
@@ -660,6 +756,9 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 
 /* ---------------------------------------------------------------- Windows high contrast / forced colours */
 @media (forced-colors: active) {
+  .rnb__cell * { forced-color-adjust: auto; }
+  .c-wall, .c-beam, .c-door { fill: Canvas !important; }
+  .rnb__meter { forced-color-adjust: auto; }
   .live-dot, .card::before, .hero__tape, .ticker, .transition, .cursor, .hero__particles { forced-color-adjust: auto; }
   .chip input:checked + span { outline: 3px solid Highlight; outline-offset: 2px; }
   .card, .select select, .search input, .btn, .card__share, .menu-btn, .lang-switch { border: 1px solid CanvasText; }

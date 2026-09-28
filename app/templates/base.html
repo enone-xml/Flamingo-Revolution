@@ -88,10 +88,11 @@
         <li><a href="{{ url('/') }}#feed"><span class="menu__num">01</span><span class="menu__text">{{ t('nav_feed') }}</span></a></li>
         <li><a href="{{ url('/digest') }}"{% if path == "/digest" %} aria-current="page"{% endif %}><span class="menu__num">02</span><span class="menu__text">{{ t('nav_digest') }}</span></a></li>
         <li><a href="{{ url('/timeline') }}"{% if path == "/timeline" %} aria-current="page"{% endif %}><span class="menu__num">03</span><span class="menu__text">{{ t('nav_timeline') }}</span></a></li>
-        <li><a href="{{ url('/about') }}"{% if path == "/about" %} aria-current="page"{% endif %}><span class="menu__num">04</span><span class="menu__text">{{ t('nav_about') }}</span></a></li>
-        <li><a href="{{ url('/sources') }}"{% if path == "/sources" %} aria-current="page"{% endif %}><span class="menu__num">05</span><span class="menu__text">{{ t('nav_sources') }}</span></a></li>
-        <li><a href="{{ rss_url }}"><span class="menu__num">06</span><span class="menu__text">{{ t('nav_rss') }}</span></a></li>
-        <li><a href="{{ switch_url }}" lang="{{ 'sq' if lang == 'en' else 'en' }}"><span class="menu__num">07</span><span class="menu__text">{{ t('switch_lang') }}</span></a></li>
+        <li><a href="{{ url('/rnbbnb') }}"{% if path == "/rnbbnb" %} aria-current="page"{% endif %}><span class="menu__num">04</span><span class="menu__text">{{ t('nav_rnbbnb') }}</span></a></li>
+        <li><a href="{{ url('/about') }}"{% if path == "/about" %} aria-current="page"{% endif %}><span class="menu__num">05</span><span class="menu__text">{{ t('nav_about') }}</span></a></li>
+        <li><a href="{{ url('/sources') }}"{% if path == "/sources" %} aria-current="page"{% endif %}><span class="menu__num">06</span><span class="menu__text">{{ t('nav_sources') }}</span></a></li>
+        <li><a href="{{ rss_url }}"><span class="menu__num">07</span><span class="menu__text">{{ t('nav_rss') }}</span></a></li>
+        <li><a href="{{ switch_url }}" lang="{{ 'sq' if lang == 'en' else 'en' }}"><span class="menu__num">08</span><span class="menu__text">{{ t('switch_lang') }}</span></a></li>
       </ol>
     </nav>
     <p class="menu__foot">{{ t('footer_note') }}</p>
@@ -107,6 +108,7 @@
     <p class="footer__links">
       <a href="{{ url('/digest') }}"{% if path == "/digest" %} aria-current="page"{% endif %}>{{ t('nav_digest') }}</a>
       <a href="{{ url('/timeline') }}"{% if path == "/timeline" %} aria-current="page"{% endif %}>{{ t('nav_timeline') }}</a>
+      <a href="{{ url('/rnbbnb') }}"{% if path == "/rnbbnb" %} aria-current="page"{% endif %}>{{ t('nav_rnbbnb') }}</a>
       <a href="{{ url('/about') }}"{% if path == "/about" %} aria-current="page"{% endif %}>{{ t('nav_about') }}</a>
       <a href="{{ url('/sources') }}"{% if path == "/sources" %} aria-current="page"{% endif %}>{{ t('nav_sources') }}</a>
       <a href="{{ rss_url }}">RSS</a>
@@ -156,5 +158,6 @@
   <script src="/static/js/vendor/gsap.min.js?v={{ v }}" defer></script>
   <script src="/static/js/vendor/ScrollTrigger.min.js?v={{ v }}" defer></script>
   <script src="/static/js/site.js?v={{ v }}" defer></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

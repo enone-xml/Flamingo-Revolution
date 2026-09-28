@@ -75,7 +75,17 @@ def connect(path: str | None = None) -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
+    migrate(conn)
     return conn
+
+
+def migrate(conn) -> None:
+    """Add columns introduced after the first release to older databases."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(articles)")}
+    if "accuses" not in cols:
+        # JSON list of who the article reports an accusation against ("rama", "berisha");
+        # NULL = not checked yet. Filled by app/accuse.py.
+        conn.execute("ALTER TABLE articles ADD COLUMN accuses TEXT")
 
 
 @contextmanager

@@ -17,6 +17,7 @@ STRONG_TERMS = [
     "edi rama",
     "rama government", "rama's government", "qeveria rama", "qeveria e rames",
     "kushner",                # the Zvërnec/Sazan resort developer
+    "sali berisha", "berisha's",  # the protest's motto is "RnB BnB": Rama and Berisha
 ]
 
 # Match only for Albanian outlets (country: AL), where the context is implied.
@@ -30,7 +31,7 @@ LOCAL_TERMS = [
 ]
 
 # Whole words only, for Albanian outlets ("rama" must not match "ramazan").
-LOCAL_WORDS = ["rama", "ramen", "rames", "ramet"]
+LOCAL_WORDS = ["rama", "ramen", "rames", "ramet", "berisha", "berishen", "berishes"]
 
 # International outlets must mention Albania together with a topic word.
 ALBANIA_TERMS = ["albania", "albanian", "tirana", "shqiperi"]

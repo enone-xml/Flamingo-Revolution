@@ -189,7 +189,7 @@ def test_status_page(client):
 
 
 def test_every_page_exists_in_both_languages_with_security_headers(client):
-    for path in ("/", "/timeline", "/digest", "/about", "/sources", "/status", "/feed.xml", "/digest.xml"):
+    for path in ("/", "/timeline", "/digest", "/rnbbnb", "/about", "/sources", "/status", "/feed.xml", "/digest.xml"):
         for prefix in ("", "/sq"):
             url = (prefix + path) if path != "/" else (prefix + "/" if prefix else "/")
             r = client.get(url)
@@ -214,3 +214,51 @@ def test_no_js_paging(client):
     p2 = client.get("/sq/page/2")
     assert p2.status_code == 200 and 'href="/sq/#feed"' in p2.text and "hero__title" not in p2.text
     assert 'aria-current="page"' in client.get("/about").text
+
+
+def test_rnbbnb_counts_levels_and_page(client):
+    from app import accuse
+    path = config.DB_PATH
+
+    def caller(prompt):
+        # Rama accused in the headline mentioning him, nobody else; item 99 doesn't exist
+        items = [{"n": i, "rama": "Rama" in line, "berisha": False}
+                 for i, line in enumerate(prompt.split("\n"), 1)]
+        return {"items": items + [{"n": 99, "rama": True, "berisha": True}]}, 100, 20
+
+    assert accuse.run(path, caller=caller) == 3
+    assert accuse.run(path, caller=caller) == 0  # nothing left to check
+    with db.session(path) as conn:
+        c = accuse.counts(conn)
+        assert c["rama"]["total"] == 1 and c["berisha"]["total"] == 0
+        assert c["rama"]["level"] == 0 and c["rama"]["next"] == 5
+        assert c["checked"] == 3
+    assert [accuse.level(n) for n in (0, 4, 5, 39, 40, 640, 5000)] == [0, 0, 1, 3, 4, 8, 8]
+    for p in ("/rnbbnb", "/sq/rnbbnb"):
+        r = client.get(p)
+        assert r.status_code == 200 and "RnB" in r.text and "BnB" in r.text
+        assert "rnbbnb.js" in r.text
+    assert client.get("/api/rnbbnb?lang=sq").json()["rama"]["total"] == 1
+
+
+def test_accusation_check_failure_keeps_articles_unchecked(client):
+    from app import accuse
+
+    def broken(prompt):
+        raise RuntimeError("api down")
+
+    assert accuse.run(config.DB_PATH, caller=broken) == 0
+    with db.session(config.DB_PATH) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM articles WHERE accuses IS NULL").fetchone()[0] == 3
+
+
+def test_old_database_gets_accuses_column(tmp_path):
+    import sqlite3
+    path = str(tmp_path / "old.db")
+    raw = sqlite3.connect(path)
+    raw.execute("CREATE TABLE articles (id INTEGER PRIMARY KEY, url TEXT NOT NULL UNIQUE, title TEXT NOT NULL, "
+                "title_norm TEXT NOT NULL, source TEXT NOT NULL, published_at TEXT NOT NULL, fetched_at TEXT NOT NULL, "
+                "ai_status TEXT NOT NULL DEFAULT 'pending', story_key TEXT)")
+    raw.commit(); raw.close()
+    with db.session(path) as conn:
+        assert "accuses" in {r["name"] for r in conn.execute("PRAGMA table_info(articles)")}

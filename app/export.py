@@ -10,7 +10,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import config, db, feed
+from . import accuse, config, db, feed
 
 log = logging.getLogger("export")
 
@@ -33,7 +33,8 @@ def headers_file(main) -> str:
 
     Note: we tried 'Cache-Control: no-transform' to stop Cloudflare injecting its
     analytics script, but it also switches off Cloudflare's compression (HTML went
-    from ~15 KB to 79 KB), so it's not used. Our CSP blocks that script anyway."""
+    from ~15 KB to 79 KB), so it's not used. The CSP allows that script: it's
+    Cloudflare's cookie-free Web Analytics, which shows Eno the visitor numbers."""
     sec = "".join(f"  {k}: {v}\n" for k, v in main.SECURITY_HEADERS.items())
     rss = "".join(f"{p}\n  Content-Type: application/rss+xml; charset=utf-8\n"
                   for p in ("/feed.xml", "/sq/feed.xml", "/digest.xml", "/sq/digest.xml"))
@@ -146,6 +147,11 @@ def run(export_dir: str | None = None) -> Path:
         (data_dir / f"articles-{lang}{suffix}.json").write_text(body, encoding="utf-8")
         content_hash.update(json.dumps(payload["groups"], sort_keys=True).encode())
     (data_dir / "stats.json").write_text(json.dumps(stats))
+    with db.session() as conn:
+        for lang in ("en", "sq"):
+            cells = accuse.counts(conn, lang)
+            (data_dir / f"rnbbnb-{lang}.json").write_text(json.dumps(cells, ensure_ascii=False), encoding="utf-8")
+            content_hash.update(json.dumps(cells, sort_keys=True).encode())
     exported_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     # The publisher reads this to decide whether a new upload is needed.
     (data_dir / "version.json").write_text(json.dumps({

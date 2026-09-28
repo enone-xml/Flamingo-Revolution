@@ -49,5 +49,5 @@ sources:
 # because its terms only allow personal, non-commercial use.
 # GDELT rate-limits hard, so the fetcher waits 30 seconds between searches.
 searches:
-  - {name: "GDELT English", query: '("Flamingo Revolution" OR Zvernec OR Sazan OR "Vjosa-Narta" OR "Edi Rama") sourcelang:english', lang: en}
-  - {name: "GDELT Albanian", query: '("Revolucioni i Flamingove" OR Zvernec OR Sazan OR "Edi Rama" OR "protesta Tirane") sourcelang:albanian', lang: sq}
+  - {name: "GDELT English", query: '("Flamingo Revolution" OR Zvernec OR Sazan OR "Vjosa-Narta" OR "Edi Rama" OR "Sali Berisha") sourcelang:english', lang: en}
+  - {name: "GDELT Albanian", query: '("Revolucioni i Flamingove" OR Zvernec OR Sazan OR "Edi Rama" OR "Sali Berisha" OR "protesta Tirane") sourcelang:albanian', lang: sq}

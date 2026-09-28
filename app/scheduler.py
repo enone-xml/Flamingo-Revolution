@@ -22,6 +22,11 @@ def pipeline() -> None:
     except Exception:
         log.exception("AI run failed")
     try:
+        from . import accuse
+        accuse.run()
+    except Exception:
+        log.exception("accusation check failed")
+    try:
         from . import digest
         digest.maybe_make()
     except Exception:

@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from . import ai, config, db, digest, feed, fetcher, i18n, scheduler
+from . import accuse, ai, config, db, digest, feed, fetcher, i18n, scheduler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 for noisy in ("httpx", "httpx2"):
@@ -152,7 +152,8 @@ def bilingual(path: str):
 
 # Pages that exist in both languages. The static export writes every one of them,
 # and the sitemap lists those marked True.
-PAGES = {"/": True, "/timeline": True, "/digest": True, "/about": True, "/sources": True, "/status": False}
+PAGES = {"/": True, "/timeline": True, "/digest": True, "/rnbbnb": True, "/about": True, "/sources": True,
+         "/status": False}
 
 
 def clean_filters(tag, source, src_lang, rng):
@@ -312,6 +313,14 @@ def digest_page(request: Request, ui: str):
     return render(request, "digest.html", ui, "digest", "/digest", digests=items)
 
 
+@bilingual("/rnbbnb")
+def rnbbnb_page(request: Request, ui: str):
+    with db.session() as conn:
+        data = accuse.counts(conn, ui)
+    names = i18n.t(ui, "rnb_level_names").split("|")
+    return render(request, "rnbbnb.html", ui, "rnbbnb", "/rnbbnb", data=data, level_names=names)
+
+
 # ---------------------------------------------------------------- RSS
 
 def rss_response(lang: str, title: str, page_path: str, feed_path: str, description: str,
@@ -390,6 +399,12 @@ def api_articles(page: int = Query(1, ge=1, le=500), per_page: int = Query(20, g
         data = feed.query_groups(conn, ui, tag, source, lang, range, page, per_page, since_id, q=clean_query(q))
         data["stats"] = feed.stats(conn, len(source_list()))
     return JSONResponse(data, headers={"Cache-Control": "public, max-age=30"})
+
+
+@app.get("/api/rnbbnb")
+def api_rnbbnb(lang: str = Query("en", pattern="^(en|sq)$")):
+    with db.session() as conn:
+        return accuse.counts(conn, lang)
 
 
 @app.get("/api/stats")

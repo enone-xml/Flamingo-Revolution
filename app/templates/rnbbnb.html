@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ t('rnb_title') }} · {{ t('site_name') }}{% endblock %}
+{% block description %}{{ t('seo_desc_rnbbnb') }}{% endblock %}
+{% macro cell(key, sign, name, d) %}
+{% set nmax = data.levels|length %}
+{% set on_items = level_names[:d.level] %}
+<section class="rnb__side rnb__side--{{ key }}" data-side="{{ key }}" data-level="{{ d.level }}" aria-labelledby="rnb-{{ key }}">
+  <h2 class="rnb__sign" id="rnb-{{ key }}">{{ sign }}<span class="rnb__name">{{ name }}</span></h2>
+  <svg class="rnb__cell" viewBox="0 0 300 380" role="img" aria-label="{{ t('rnb_cell_label', name=name, n=d.level, max=nmax, items=(on_items|join(', ') if on_items else t('rnb_open_cell'))) }}">
+    <!-- the cell: back wall, floor, bunk, little barred window -->
+    <rect class="c-wall" x="30" y="50" width="240" height="290"/>
+    <path class="c-line" d="M30 340h240M30 50h240M30 50v290M270 50v290"/>
+    <path class="c-line c-thin" d="M200 120h40v30h-40zM210 120v30M220 120v30M230 120v30"/>
+    <path class="c-line c-thin" d="M44 290h70v14H44zM48 304v36M110 304v36"/>
+    <!-- the prisoner (a drawing, not a photo) -->
+    <g class="c-fig">
+      {% if key == "rama" %}
+      <circle cx="150" cy="118" r="20"/>
+      <path d="M140 116h6M154 116h6M144 128q6 4 12 0"/>
+      <path d="M150 138v14M122 158q28-10 56 0l-4 90h-48z"/>
+      <path d="M126 162l-14 70M174 162l14 70M136 248v84M164 248v84M128 332h14M158 332h14"/>
+      {% else %}
+      <circle cx="150" cy="150" r="19"/>
+      <path class="c-hair" d="M133 141q3-19 17-19t17 19q-6-7-17-7t-17 7z"/>
+      <path d="M141 150h6M153 150h6M144 161q6 3 12 0"/>
+      <path d="M150 169v10M124 184q26-10 52 0l-4 72h-44z"/>
+      <path d="M128 188l-12 60M172 188l12 60M138 256v76M162 256v76M130 332h14M156 332h14"/>
+      {% endif %}
+    </g>
+    <!-- 1 bars on both sides of the doorway -->
+    <g class="sec sec-1{% if d.level >= 1 %} on{% endif %}" data-lvl="1">
+      {% for x in [42, 60, 78, 96, 204, 222, 240, 258] %}<path d="M{{ x }} 52v286"/>{% endfor %}
+      <path d="M32 60h78M190 60h78M32 330h78M190 330h78"/>
+    </g>
+    <!-- 2 the door slams shut -->
+    <g class="sec sec-2{% if d.level >= 2 %} on{% endif %}" data-lvl="2">
+      <rect class="c-door" x="110" y="54" width="80" height="282"/>
+      {% for x in [124, 140, 160, 176] %}<path d="M{{ x }} 56v278"/>{% endfor %}
+      <path d="M112 110h76M112 250h76"/>
+    </g>
+    <!-- 3 padlock -->
+    <g class="sec sec-3{% if d.level >= 3 %} on{% endif %}" data-lvl="3">
+      <path class="c-shackle" d="M178 196v-12a12 12 0 0 1 24 0v12"/>
+      <rect class="c-lock" x="172" y="196" width="36" height="30" rx="4"/>
+      <circle class="c-hole" cx="190" cy="209" r="4"/>
+    </g>
+    <!-- 4 chains across the door -->
+    <g class="sec sec-4{% if d.level >= 4 %} on{% endif %}" data-lvl="4">
+      <path class="c-chain" d="M40 90L260 300"/>
+      <path class="c-chain" d="M260 90L40 300"/>
+    </g>
+    <!-- 5 bolts and crossbars -->
+    <g class="sec sec-5{% if d.level >= 5 %} on{% endif %}" data-lvl="5">
+      <path class="c-bar" d="M34 150h232M34 270h232"/>
+      {% for x in [44, 256] %}{% for y in [150, 270] %}<circle class="c-bolt" cx="{{ x }}" cy="{{ y }}" r="6"/>{% endfor %}{% endfor %}
+    </g>
+    <!-- 6 camera and spotlight -->
+    <g class="sec sec-6{% if d.level >= 6 %} on{% endif %}" data-lvl="6">
+      <path class="c-beam" d="M262 30L120 340h110z"/>
+      <path class="c-cam" d="M244 16h40v18h-40zM244 25l-12 6v-12z"/>
+      <circle class="c-rec" cx="278" cy="21" r="3"/>
+    </g>
+    <!-- 7 guard -->
+    <g class="sec sec-7{% if d.level >= 7 %} on{% endif %}" data-lvl="7">
+      <g class="c-guard">
+        <path class="c-cap" d="M268 262h28l-4-10h-20z"/>
+        <circle cx="282" cy="272" r="9"/>
+        <path d="M282 281v6M270 290q12-6 24 0l-2 30h-20zM276 320v20M288 320v20M268 294l-6 26"/>
+      </g>
+    </g>
+    <!-- 8 vault door, with a small window -->
+    <g class="sec sec-8{% if d.level >= 8 %} on{% endif %}" data-lvl="8">
+      <path class="c-vault" fill-rule="evenodd" d="M30 50h240v290H30zM150 88a34 34 0 1 0 0.1 0z"/>
+      <circle class="c-wheel" cx="150" cy="250" r="30"/>
+      <path class="c-wheel" d="M150 214v72M114 250h72M125 225l50 50M175 225l-50 50"/>
+      {% for x in [44, 256] %}{% for y in [64, 326] %}<circle class="c-bolt" cx="{{ x }}" cy="{{ y }}" r="5"/>{% endfor %}{% endfor %}
+    </g>
+  </svg>
+  <p class="rnb__count"><span class="rnb__num" data-count="{{ d.total }}">{{ d.total }}</span><span class="rnb__label">{{ t('rnb_count_label') }}</span></p>
+  <p class="rnb__week" data-week>{{ t('rnb_week', n=d.week) }}</p>
+  <progress class="rnb__meter" max="100" value="{{ d.progress }}" aria-hidden="true"></progress>
+  <p class="rnb__level" data-level-text>{{ t('rnb_level', n=d.level, max=nmax) }} · {% if d.next %}{{ t('rnb_next', n=d.next - d.total) }}{% else %}{{ t('rnb_maxed') }}{% endif %}</p>
+  <h3 class="rnb__latest-title">{{ t('rnb_latest') }}</h3>
+  <ul class="rnb__latest">
+    {% for a in d.latest %}
+    <li><a href="{{ a.url }}" rel="noopener" target="_blank">{{ a.title }}</a><span class="rnb__src">{{ a.source }} · <time datetime="{{ a.published_at }}">{{ a.published_at|dmy }}</time></span></li>
+    {% else %}
+    <li class="rnb__none">{{ t('rnb_none') }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endmacro %}
+{% block content %}
+<article class="page rnb">
+  <h1 class="page__title" data-split>{{ t('rnb_title') }}</h1>
+  <p class="rnb__satire">{{ t('rnb_satire') }}</p>
+  <div class="rnb__grid" data-src="{% if static %}/data/rnbbnb-{{ lang }}.json{% else %}/api/rnbbnb?lang={{ lang }}{% endif %}">
+    {{ cell("rama", "RnB", t('rnb_rama'), data.rama) }}
+    {{ cell("berisha", "BnB", t('rnb_berisha'), data.berisha) }}
+  </div>
+  <div class="page__body rnb__about">
+    <p>{{ t('rnb_intro') }}</p>
+    <h2>{{ t('rnb_levels_title') }}</h2>
+    <ol class="rnb__levels">
+      {% for n in data.levels %}<li><strong>{{ n }}</strong> {{ level_names[loop.index0] }}</li>{% endfor %}
+    </ol>
+    <p class="rnb__checked">{{ t('rnb_checked', n=data.checked) }}</p>
+  </div>
+</article>
+{% endblock %}
+{% block scripts %}<script type="application/json" id="rnb-i18n">{{ {
+  'week': t('rnb_week'), 'level': t('rnb_level'), 'next': t('rnb_next'), 'maxed': t('rnb_maxed'),
+  'cell': t('rnb_cell_label'), 'open': t('rnb_open_cell'), 'names': level_names,
+  'people': {'rama': t('rnb_rama'), 'berisha': t('rnb_berisha')}
+}|tojson }}</script>
+<script src="/static/js/rnbbnb.js?v={{ v }}" defer></script>{% endblock %}
