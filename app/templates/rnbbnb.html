@@ -7,73 +7,148 @@
 <section class="rnb__side rnb__side--{{ key }}" data-side="{{ key }}" data-level="{{ d.level }}" aria-labelledby="rnb-{{ key }}">
   <h2 class="rnb__sign" id="rnb-{{ key }}">{{ sign }}<span class="rnb__name">{{ name }}</span></h2>
   <svg class="rnb__cell" viewBox="0 0 300 380" role="img" aria-label="{{ t('rnb_cell_label', name=name, n=d.level, max=nmax, items=(on_items|join(', ') if on_items else t('rnb_open_cell'))) }}">
-    <!-- the cell: back wall, floor, bunk, little barred window -->
-    <rect class="c-wall" x="30" y="50" width="240" height="290"/>
-    <path class="c-line" d="M30 340h240M30 50h240M30 50v290M270 50v290"/>
-    <path class="c-line c-thin" d="M200 120h40v30h-40zM210 120v30M220 120v30M230 120v30"/>
-    <path class="c-line c-thin" d="M44 290h70v14H44zM48 304v36M110 304v36"/>
-    <!-- the prisoner (a drawing, not a photo) -->
+    <defs>
+      <linearGradient id="wall-{{ key }}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b3b38"/><stop offset=".55" stop-color="#2c2c2a"/><stop offset="1" stop-color="#1e1e1c"/></linearGradient>
+      <radialGradient id="glow-{{ key }}" cx=".72" cy=".25" r=".7"><stop offset="0" stop-color="#fff6d8" stop-opacity=".22"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient>
+      <linearGradient id="floor-{{ key }}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#262624"/><stop offset="1" stop-color="#121211"/></linearGradient>
+      <linearGradient id="beam-{{ key }}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4" stop-opacity=".35"/><stop offset="1" stop-color="#fff3c4" stop-opacity="0"/></linearGradient>
+      <linearGradient id="steel-{{ key }}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3e3e3c"/><stop offset=".45" stop-color="#d9d9d2"/><stop offset=".6" stop-color="#9a9a94"/><stop offset="1" stop-color="#353533"/></linearGradient>
+      <linearGradient id="steelh-{{ key }}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3e3e3c"/><stop offset=".45" stop-color="#d9d9d2"/><stop offset=".6" stop-color="#9a9a94"/><stop offset="1" stop-color="#353533"/></linearGradient>
+      <linearGradient id="brass-{{ key }}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7d774"/><stop offset=".5" stop-color="#c8962c"/><stop offset="1" stop-color="#7a5a14"/></linearGradient>
+      <linearGradient id="plate-{{ key }}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a8c90"/><stop offset=".5" stop-color="#5d6064"/><stop offset="1" stop-color="#3a3c40"/></linearGradient>
+      <radialGradient id="skin-{{ key }}" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#f4c9a4"/><stop offset=".7" stop-color="#dca47c"/><stop offset="1" stop-color="#b87c56"/></radialGradient>
+      <pattern id="blocks-{{ key }}" width="48" height="24" patternUnits="userSpaceOnUse"><path d="M0 23.5h48M24 0v12M0 12h48M0 12v12M48 12v12" stroke="#000" stroke-opacity=".35" stroke-width="1.2" fill="none"/></pattern>
+    </defs>
+    <!-- the cell: concrete block walls, floor, light from a high window, bunk, toilet -->
+    <rect x="30" y="50" width="240" height="258" fill="url(#wall-{{ key }})"/>
+    <rect x="30" y="50" width="240" height="258" fill="url(#blocks-{{ key }})"/>
+    <rect x="30" y="50" width="240" height="258" fill="url(#glow-{{ key }})"/>
+    <path d="M30 308h240l0 32H30z" fill="url(#floor-{{ key }})"/>
+    <path d="M30 308h240" stroke="#0c0c0b" stroke-width="2"/>
+    <ellipse cx="92" cy="226" rx="18" ry="30" fill="#000" opacity=".12"/>
+    <ellipse cx="230" cy="270" rx="12" ry="20" fill="#3a2e1e" opacity=".18"/>
+    <rect x="196" y="84" width="46" height="30" fill="#0e0e0d"/>
+    <rect x="198" y="86" width="42" height="26" fill="#9fb6c8" opacity=".55"/>
+    <path d="M208 86v26M219 86v26M230 86v26" stroke="url(#steel-{{ key }})" stroke-width="3"/>
+    <path d="M198 112h42l-60 196h-90z" fill="url(#beam-{{ key }})"/>
+    <!-- bunk -->
+    <rect x="40" y="262" width="78" height="6" fill="url(#steelh-{{ key }})"/>
+    <path d="M44 268v40M114 268v40" stroke="#6a6a66" stroke-width="4"/>
+    <rect x="41" y="250" width="76" height="13" rx="4" fill="#4b5a6a"/>
+    <rect x="43" y="244" width="22" height="9" rx="4" fill="#c9cdd2"/>
+    <!-- steel toilet -->
+    <path d="M232 284h28v10q0 14-14 14q-14 0-14-14z" fill="url(#steel-{{ key }})"/>
+    <rect x="248" y="266" width="14" height="20" rx="2" fill="#8d8d88"/>
+    <!-- the prisoner: a caricature, not a photo -->
     <g class="c-fig">
       {% if key == "rama" %}
-      <circle cx="150" cy="118" r="20"/>
-      <path d="M140 116h6M154 116h6M144 128q6 4 12 0"/>
-      <path d="M150 138v14M122 158q28-10 56 0l-4 90h-48z"/>
-      <path d="M126 162l-14 70M174 162l14 70M136 248v84M164 248v84M128 332h14M158 332h14"/>
+      <ellipse cx="150" cy="334" rx="40" ry="5" fill="#000" opacity=".35"/>
+      <path d="M133 246L129 326h16l5-66 5 66h16l-4-80z" fill="#2c4a6e"/>
+      <path d="M150 262v60" stroke="#1d3350" stroke-width="1.5"/>
+      <path d="M121 326h25v9h-27q-3-5 2-9zM155 326h25q5 4 2 9h-27z" fill="#f2f2ee"/>
+      <path d="M121 331h25M155 331h25" stroke="#c9c9c2" stroke-width="1.5"/>
+      <path d="M129 190q21-8 42 0l3 60h-48z" fill="#ecece6"/>
+      <path d="M127 189q-10 4-10 16l-3 50h24l7-64zM173 189q10 4 10 16l3 50h-24l-7-64z" fill="#24272c"/>
+      <path d="M117 203q-9 30-2 50l11 2q-3-25 5-50zM183 203q9 30 2 50l-11 2q3-25-5-50z" fill="#1a1c20"/>
+      <path d="M141 174h18v18l-9 5-9-5z" fill="#d49c76"/>
+      <ellipse cx="115" cy="145" rx="6" ry="11" fill="#d49c76"/>
+      <ellipse cx="185" cy="145" rx="6" ry="11" fill="#d49c76"/>
+      <ellipse cx="150" cy="136" rx="35" ry="42" fill="url(#skin-{{ key }})"/>
+      <path d="M117 130q1 14 5 24M183 130q-1 14-5 24" stroke="#8f8981" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="136" cy="106" rx="11" ry="5" fill="#fff" opacity=".35" transform="rotate(-24 136 106)"/>
+      <path d="M121 146q3 32 29 36q26-4 29-36q-6 19-29 21q-23-2-29-21z" fill="#6f675f" opacity=".55"/>
+      <path d="M128 127q9-7 18-1M154 126q9-6 18 1" stroke="#5a534d" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <ellipse cx="138" cy="136" rx="4.5" ry="3.5" fill="#fff"/><circle cx="139" cy="136" r="2.4" fill="#1b1b1b"/>
+      <ellipse cx="162" cy="136" rx="4.5" ry="3.5" fill="#fff"/><circle cx="163" cy="136" r="2.4" fill="#1b1b1b"/>
+      <path d="M151 137q-7 17-3 23q5 3 10-1" stroke="#a86c4c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M134 165q16 10 33-5" stroke="#5e2626" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      <path d="M164 159l5 3" stroke="#5e2626" stroke-width="2" stroke-linecap="round"/>
       {% else %}
-      <circle cx="150" cy="150" r="19"/>
-      <path class="c-hair" d="M133 141q3-19 17-19t17 19q-6-7-17-7t-17 7z"/>
-      <path d="M141 150h6M153 150h6M144 161q6 3 12 0"/>
-      <path d="M150 169v10M124 184q26-10 52 0l-4 72h-44z"/>
-      <path d="M128 188l-12 60M172 188l12 60M138 256v76M162 256v76M130 332h14M156 332h14"/>
+      <ellipse cx="150" cy="334" rx="40" ry="5" fill="#000" opacity=".35"/>
+      <path d="M128 262l-2 64h19l5-54 5 54h19l-2-64z" fill="#1c2640"/>
+      <path d="M119 326h27v9h-29q-2-5 2-9zM154 326h27q4 4 2 9h-29z" fill="#141414"/>
+      <path d="M120 200q30-12 60 0l5 66h-70z" fill="#22304f"/>
+      <path d="M140 198l10 26 10-26z" fill="#f4f4f0"/>
+      <path d="M147 205h6l3 32-6 7-6-7z" fill="#2f6fd6"/>
+      <path d="M140 198l10 26-14-2zM160 198l-10 26 14-2z" fill="#18233c"/>
+      <path d="M121 204q-12 32-6 58l12 2q-2-30 6-56z" fill="#1b2744"/>
+      <circle cx="120" cy="263" r="7" fill="#d49c76"/>
+      <path d="M176 206q24-8 36-52l-11-5q-10 36-25 42z" fill="#1b2744"/>
+      <circle cx="207" cy="148" r="8" fill="#d49c76"/>
+      <path d="M208 142v-18 stroke="#d49c76" stroke-width="5" stroke-linecap="round"/>
+      <path d="M142 184h16v16l-8 4-8-4z" fill="#d49c76"/>
+      <ellipse cx="117" cy="160" rx="6" ry="10" fill="#d49c76"/>
+      <ellipse cx="183" cy="160" rx="6" ry="10" fill="#d49c76"/>
+      <ellipse cx="150" cy="156" rx="33" ry="36" fill="url(#skin-{{ key }})"/>
+      <path d="M116 158q-10-44 22-60q34-14 54 8q14 16 8 48q-4-22-16-30q-14 8-36 2q-20-4-28 12q-4 10-4 20z" fill="#f3f3ee" stroke="#cfcfc7" stroke-width="1.5"/>
+      <path d="M138 104q18-6 36 4M132 112q20-8 44 2" stroke="#d6d6cf" stroke-width="1.5" fill="none"/>
+      <path d="M127 144q10-8 20-2M153 142q10-6 20 2" stroke="#e4e4de" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <ellipse cx="138" cy="152" rx="4.5" ry="3.5" fill="#fff"/><circle cx="138" cy="152" r="2.4" fill="#1b1b1b"/>
+      <ellipse cx="162" cy="152" rx="4.5" ry="3.5" fill="#fff"/><circle cx="162" cy="152" r="2.4" fill="#1b1b1b"/>
+      <path d="M150 152q-4 12-1 17q5 3 9 0q1-5-4-8" stroke="#a86c4c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="150" cy="178" rx="8" ry="5" fill="#4a1c1c"/>
+      <path d="M126 170q4 12 12 16M174 170q-4 12-12 16" stroke="#b87c56" stroke-width="2" fill="none" stroke-linecap="round"/>
       {% endif %}
     </g>
     <!-- 1 bars on both sides of the doorway -->
     <g class="sec sec-1{% if d.level >= 1 %} on{% endif %}" data-lvl="1">
-      {% for x in [42, 60, 78, 96, 204, 222, 240, 258] %}<path d="M{{ x }} 52v286"/>{% endfor %}
-      <path d="M32 60h78M190 60h78M32 330h78M190 330h78"/>
+      {% for x in [40, 58, 76, 94, 200, 218, 236, 254] %}<rect x="{{ x }}" y="52" width="7" height="288" rx="3" fill="url(#steel-{{ key }})"/>{% endfor %}
+      <rect x="32" y="58" width="80" height="7" fill="url(#steelh-{{ key }})"/><rect x="188" y="58" width="80" height="7" fill="url(#steelh-{{ key }})"/>
+      <rect x="32" y="326" width="80" height="7" fill="url(#steelh-{{ key }})"/><rect x="188" y="326" width="80" height="7" fill="url(#steelh-{{ key }})"/>
     </g>
-    <!-- 2 the door slams shut -->
+    <!-- 2 the barred door slams shut -->
     <g class="sec sec-2{% if d.level >= 2 %} on{% endif %}" data-lvl="2">
-      <rect class="c-door" x="110" y="54" width="80" height="282"/>
-      {% for x in [124, 140, 160, 176] %}<path d="M{{ x }} 56v278"/>{% endfor %}
-      <path d="M112 110h76M112 250h76"/>
+      <rect x="110" y="52" width="80" height="288" fill="none" stroke="url(#steel-{{ key }})" stroke-width="7"/>
+      {% for x in [119, 134, 160, 175] %}<rect x="{{ x }}" y="54" width="6" height="284" rx="3" fill="url(#steel-{{ key }})"/>{% endfor %}
+      <rect x="112" y="112" width="76" height="8" fill="url(#steelh-{{ key }})"/>
+      <rect x="112" y="248" width="76" height="8" fill="url(#steelh-{{ key }})"/>
+      <rect x="174" y="186" width="16" height="40" rx="2" fill="#4c4c49"/>
     </g>
     <!-- 3 padlock -->
     <g class="sec sec-3{% if d.level >= 3 %} on{% endif %}" data-lvl="3">
-      <path class="c-shackle" d="M178 196v-12a12 12 0 0 1 24 0v12"/>
-      <rect class="c-lock" x="172" y="196" width="36" height="30" rx="4"/>
-      <circle class="c-hole" cx="190" cy="209" r="4"/>
+      <path d="M178 198v-13a12 12 0 0 1 24 0v13" stroke="url(#steel-{{ key }})" stroke-width="6" fill="none"/>
+      <rect x="171" y="196" width="38" height="32" rx="5" fill="url(#brass-{{ key }})" stroke="#5a420e" stroke-width="1.5"/>
+      <circle cx="190" cy="209" r="4" fill="#2a1e06"/><path d="M190 211v8" stroke="#2a1e06" stroke-width="3"/>
     </g>
     <!-- 4 chains across the door -->
     <g class="sec sec-4{% if d.level >= 4 %} on{% endif %}" data-lvl="4">
-      <path class="c-chain" d="M40 90L260 300"/>
-      <path class="c-chain" d="M260 90L40 300"/>
+      <path class="c-chain" d="M40 90L260 300" stroke="#77776f" stroke-width="9" stroke-dasharray="12 5" stroke-linecap="round" fill="none"/>
+      <path class="c-chain" d="M260 90L40 300" stroke="#77776f" stroke-width="9" stroke-dasharray="12 5" stroke-linecap="round" fill="none"/>
+      <path class="c-chain" d="M40 90L260 300" stroke="#d4d4cc" stroke-width="3" stroke-dasharray="8 9" stroke-linecap="round" fill="none"/>
+      <path class="c-chain" d="M260 90L40 300" stroke="#d4d4cc" stroke-width="3" stroke-dasharray="8 9" stroke-linecap="round" fill="none"/>
     </g>
     <!-- 5 bolts and crossbars -->
     <g class="sec sec-5{% if d.level >= 5 %} on{% endif %}" data-lvl="5">
-      <path class="c-bar" d="M34 150h232M34 270h232"/>
-      {% for x in [44, 256] %}{% for y in [150, 270] %}<circle class="c-bolt" cx="{{ x }}" cy="{{ y }}" r="6"/>{% endfor %}{% endfor %}
+      <rect class="c-bar" x="32" y="144" width="236" height="12" fill="url(#steelh-{{ key }})"/>
+      <rect class="c-bar" x="32" y="264" width="236" height="12" fill="url(#steelh-{{ key }})"/>
+      {% for x in [44, 256] %}{% for y in [150, 270] %}<circle class="c-bolt" cx="{{ x }}" cy="{{ y }}" r="7" fill="url(#brass-{{ key }})" stroke="#3a2c08"/>{% endfor %}{% endfor %}
     </g>
     <!-- 6 camera and spotlight -->
     <g class="sec sec-6{% if d.level >= 6 %} on{% endif %}" data-lvl="6">
-      <path class="c-beam" d="M262 30L120 340h110z"/>
-      <path class="c-cam" d="M244 16h40v18h-40zM244 25l-12 6v-12z"/>
-      <circle class="c-rec" cx="278" cy="21" r="3"/>
+      <path class="c-beam" d="M262 30L120 340h110z" fill="#fff8d0" opacity=".13"/>
+      <rect x="244" y="14" width="42" height="20" rx="3" fill="#e9e9e4" stroke="#8d8d88"/>
+      <path d="M244 24l-14 8v-16z" fill="#2b2b29"/>
+      <circle cx="236" cy="24" r="4" fill="#111"/>
+      <circle class="c-rec" cx="279" cy="19" r="3" fill="#ff3b30"/>
     </g>
     <!-- 7 guard -->
     <g class="sec sec-7{% if d.level >= 7 %} on{% endif %}" data-lvl="7">
       <g class="c-guard">
-        <path class="c-cap" d="M268 262h28l-4-10h-20z"/>
-        <circle cx="282" cy="272" r="9"/>
-        <path d="M282 281v6M270 290q12-6 24 0l-2 30h-20zM276 320v20M288 320v20M268 294l-6 26"/>
+        <path d="M272 318l-2 20h8l2-14 2 14h8l-2-20z" fill="#1a1a1a"/>
+        <path d="M268 286q14-6 28 0l2 34h-32z" fill="#2d3a2a"/>
+        <circle cx="282" cy="274" r="9" fill="#d49c76"/>
+        <path d="M270 268h24l-3-9h-18z" fill="#1f2a1d"/><rect x="268" y="267" width="28" height="3" fill="#111"/>
+        <rect x="276" y="296" width="12" height="4" fill="#c8962c"/>
       </g>
     </g>
     <!-- 8 vault door, with a small window -->
     <g class="sec sec-8{% if d.level >= 8 %} on{% endif %}" data-lvl="8">
-      <path class="c-vault" fill-rule="evenodd" d="M30 50h240v290H30zM150 88a34 34 0 1 0 0.1 0z"/>
-      <circle class="c-wheel" cx="150" cy="250" r="30"/>
-      <path class="c-wheel" d="M150 214v72M114 250h72M125 225l50 50M175 225l-50 50"/>
-      {% for x in [44, 256] %}{% for y in [64, 326] %}<circle class="c-bolt" cx="{{ x }}" cy="{{ y }}" r="5"/>{% endfor %}{% endfor %}
+      <path fill-rule="evenodd" d="M30 50h240v290H30zM150 114a32 32 0 1 0 .1 0z" fill="url(#plate-{{ key }})" stroke="#2a2b2e" stroke-width="3"/>
+      <circle cx="150" cy="146" r="34" fill="none" stroke="url(#steel-{{ key }})" stroke-width="5"/>
+      <g class="c-wheel"><circle cx="150" cy="252" r="30" fill="none" stroke="url(#steel-{{ key }})" stroke-width="6"/>
+      <path d="M150 216v72M114 252h72M125 227l50 50M175 227l-50 50" stroke="#c9c9c2" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="150" cy="252" r="8" fill="url(#brass-{{ key }})"/></g>
+      {% for x in [44, 256] %}{% for y in [64, 326] %}<circle cx="{{ x }}" cy="{{ y }}" r="5" fill="#c9c9c2" stroke="#2a2b2e"/>{% endfor %}{% endfor %}
     </g>
   </svg>
   <p class="rnb__count"><span class="rnb__num" data-count="{{ d.total }}">{{ d.total }}</span><span class="rnb__label">{{ t('rnb_count_label') }}</span></p>
