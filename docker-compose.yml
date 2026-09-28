@@ -36,6 +36,7 @@ services:
     image: docker:cli
     profiles: ["autoupdate"]
     entrypoint: ["/bin/sh", "/repo/deploy/update-loop.sh"]
+    init: true   # so "docker compose stop" ends it straight away
     user: "1000:1000"
     group_add: ["${DOCKER_GID:-1001}"]   # lets the updater use Docker
     environment:

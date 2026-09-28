@@ -32,6 +32,10 @@ while true; do
         log "local files were edited by hand; not updating automatically (commit or discard them)"
       else
         log "updating ${local_sha%${local_sha#???????}} -> ${remote_sha%${remote_sha#???????}}"
+        if [ -n "${UPDATE_DRY_RUN:-}" ]; then
+          git merge -q --ff-only "$remote_sha" && log "dry run: would rebuild now"
+          sleep "$INTERVAL"; continue
+        fi
         git merge -q --ff-only "$remote_sha" \
           && docker compose -p "$PROJECT" up -d --build web publisher \
           && log "update deployed OK" \
