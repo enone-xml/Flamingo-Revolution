@@ -127,6 +127,7 @@ def counts(conn, lang: str = "en", recent: int = 5) -> dict:
     week = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
     title = "title_sq" if lang == "sq" else "title_en"
     out = {"levels": LEVELS}
+    extra = _extra(conn)
     for p in PEOPLE:
         like = f'%"{p}"%'
         total = conn.execute("SELECT COUNT(*) FROM articles WHERE accuses LIKE ?", (like,)).fetchone()[0]
@@ -137,6 +138,9 @@ def counts(conn, lang: str = "en", recent: int = 5) -> dict:
             f"SELECT url, source, published_at, COALESCE(NULLIF({title}, ''), title) AS title "
             "FROM articles WHERE accuses LIKE ? ORDER BY published_at DESC LIMIT ?", (like, recent),
         ).fetchall()
+        # Headlines counted by the one-time look-back, which aren't stored as articles.
+        total += len(extra.get(p, []))
+        this_week += sum(1 for pub in extra.get(p, []) if pub >= week)
         lvl = level(total)
         prev = LEVELS[lvl - 1] if lvl else 0
         nxt = LEVELS[lvl] if lvl < len(LEVELS) else None
@@ -148,3 +152,110 @@ def counts(conn, lang: str = "en", recent: int = 5) -> dict:
         }
     out["checked"] = conn.execute("SELECT COUNT(*) FROM articles WHERE accuses IS NOT NULL").fetchone()[0]
     return out
+
+
+# ---------------------------------------------------------------- one-time look-back
+
+EXTRA_KEY = "accuse_extra"  # meta: {"berisha": [published_at, ...], "seen": [url hashes]}
+
+
+def _extra(conn) -> dict:
+    try:
+        return json.loads(db.get_meta(conn, EXTRA_KEY) or "{}")
+    except ValueError:
+        return {}
+
+
+def lookback(days: int = 7, db_path: str | None = None, caller=None, entries=None) -> dict:
+    """Check the last `days` of Berisha headlines that were never saved (the filter
+    didn't include him yet). Only the count is kept: no titles, links or text,
+    just a hash of each link so nothing is counted twice.
+
+    `entries` (title, url, published_at) is for tests; normally they come from
+    every RSS feed plus two news searches."""
+    import hashlib
+
+    from . import fetcher, keywords
+
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    if entries is None:
+        entries = _collect(since)
+    with db.session(db_path) as conn:
+        extra = _extra(conn)
+        seen = set(extra.get("seen", []))
+        known = {r[0] for r in conn.execute("SELECT url FROM articles")}
+        todo, found = [], 0
+        for title, url, published in entries:
+            norm = keywords.normalize(title)
+            if not keywords._has_word(norm, ["berisha", "berishen", "berishes"]) or published < fetcher.iso(since):
+                continue
+            url = fetcher.normalize_url(url)
+            h = hashlib.sha256(url.encode()).hexdigest()[:16]
+            if url in known or h in seen:
+                continue
+            seen.add(h)
+            found += 1
+            todo.append((title, published))
+        caller = caller or (_fake if config.AI_MODE == "fake" else _call)
+        added = []
+        for i in range(0, len(todo), BATCH):
+            chunk = todo[i:i + BATCH]
+            prompt = "\n".join(f"{n}. {t}" for n, (t, _) in enumerate(chunk, 1)).replace("\r", " ")
+            data, tin, tout = caller(prompt)
+            yes = {it.get("n") for it in data.get("items", []) if isinstance(it, dict) and it.get("berisha") is True}
+            added += [pub for n, (_, pub) in enumerate(chunk, 1) if n in yes]
+            conn.execute(
+                "INSERT INTO ai_usage(created_at, month, article_id, input_tokens, output_tokens, cost_usd) "
+                "VALUES(?, ?, NULL, ?, ?, ?)",
+                (datetime.now(timezone.utc).isoformat(), ai.month_now(), tin, tout, ai.cost_of(tin, tout)),
+            )
+        extra["berisha"] = extra.get("berisha", []) + added
+        extra["seen"] = sorted(seen)
+        db.set_meta(conn, EXTRA_KEY, json.dumps(extra))
+    return {"berisha_headlines": found, "accusations_added": len(added)}
+
+
+def _collect(since) -> list[tuple[str, str, str]]:
+    """Headlines from every feed (obeying robots.txt) and two 7-day news searches."""
+    from urllib.parse import quote, urlencode
+
+    import feedparser
+
+    from . import fetcher
+
+    sources, _ = fetcher.load_sources()
+    client = fetcher.PoliteClient()
+    out = []
+    urls = [s["url"] for s in sources]
+    for q in ('(Berisha OR "Sali Berisha") sourcelang:albanian', '"Sali Berisha" sourcelang:english'):
+        urls.append(fetcher.GDELT_URL + "?" + urlencode(
+            {"query": q, "mode": "ArtList", "format": "rss", "maxrecords": "250",
+             "timespan": "7d", "sort": "DateDesc"}, quote_via=quote))
+    try:
+        for url in urls:
+            try:
+                if not client.allowed(url):
+                    continue
+                gdelt = url.startswith(fetcher.GDELT_URL)
+                resp = client.get(url, min_gap=fetcher.GDELT_MIN_GAP if gdelt else fetcher.HOST_MIN_GAP)
+                if resp.status_code != 200:
+                    log.info("look-back: %s gave HTTP %s", url[:60], resp.status_code)
+                    continue
+                for e in feedparser.parse(resp.content).entries:
+                    title, link = fetcher.clean_text(e.get("title", ""), 300), e.get("link")
+                    if title and link:
+                        out.append((title, link, fetcher.iso(fetcher.entry_time(e))))
+            except Exception as exc:
+                log.info("look-back: skipped %s (%s)", url[:60], exc)
+    finally:
+        client.close()
+    return out
+
+
+if __name__ == "__main__":
+    import sys
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    if len(sys.argv) > 1 and sys.argv[1] == "lookback":
+        print(lookback(int(sys.argv[2]) if len(sys.argv) > 2 else 7))
+    else:
+        print(f"checked {run()} articles")

@@ -262,3 +262,22 @@ def test_old_database_gets_accuses_column(tmp_path):
     raw.commit(); raw.close()
     with db.session(path) as conn:
         assert "accuses" in {r["name"] for r in conn.execute("PRAGMA table_info(articles)")}
+
+
+def test_berisha_lookback_counts_without_storing(client):
+    from app import accuse
+    now = "2099-01-01T00:00:00Z"
+    entries = [
+        ("SPAK akuzon Berishën për korrupsion", "https://ex.al/b1", now),
+        ("Berisha flet për zgjedhjet", "https://ex.al/b2", now),
+        ("Moti sot", "https://ex.al/x", now),               # not about Berisha
+        ("Berisha", "https://ex.al/0", now),                # already stored as an article
+        ("Berisha old news", "https://ex.al/old", "2000-01-01T00:00:00Z"),
+    ]
+    caller = lambda prompt: ({"items": [{"n": 1, "rama": False, "berisha": True},
+                                        {"n": 2, "rama": False, "berisha": False}]}, 10, 5)
+    assert accuse.lookback(7, config.DB_PATH, caller, entries) == {"berisha_headlines": 2, "accusations_added": 1}
+    assert accuse.lookback(7, config.DB_PATH, caller, entries)["berisha_headlines"] == 0  # never twice
+    with db.session(config.DB_PATH) as conn:
+        assert accuse.counts(conn)["berisha"]["total"] == 1
+        assert conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0] == 3  # nothing saved
