@@ -15,3 +15,8 @@ AI_MODE = os.getenv("AI_MODE", "real")  # "real", "fake" or "off"
 AI_MONTHLY_BUDGET_USD = float(os.getenv("AI_MONTHLY_BUDGET_USD", "4"))
 
 USER_AGENT = f"FlamingoWatchBot/1.0 (+{SITE_URL}/about)"
+
+# Haiku 4.5 list prices, USD per million tokens (checked 2026-09-28).
+AI_PRICE_INPUT_PER_M = float(os.getenv("AI_PRICE_INPUT_PER_M", "1.0"))
+AI_PRICE_OUTPUT_PER_M = float(os.getenv("AI_PRICE_OUTPUT_PER_M", "5.0"))
+AI_MAX_PER_RUN = int(os.getenv("AI_MAX_PER_RUN", "40"))

@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS articles (
     lang          TEXT,
     published_at  TEXT NOT NULL,    -- ISO 8601 UTC
     fetched_at    TEXT NOT NULL,
-    ai_status     TEXT NOT NULL DEFAULT 'pending',  -- pending/done/failed/skipped/keyword_only
+    ai_status     TEXT NOT NULL DEFAULT 'pending',  -- pending/done/failed/keyword_only
+    ai_attempts   INTEGER NOT NULL DEFAULT 0,
     relevant      INTEGER,          -- 1/0 from the AI, NULL if unknown
     title_en      TEXT,
     title_sq      TEXT,
