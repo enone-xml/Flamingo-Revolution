@@ -69,3 +69,21 @@ def test_one_bad_feed_does_not_stop_others(tmp_path, monkeypatch):
     with db.session(dbfile) as conn:
         bad = conn.execute("SELECT last_error FROM feed_status WHERE source='Bad'").fetchone()
         assert "ConnectError" in bad["last_error"]
+
+
+def test_foreign_headlines_are_skipped_for_albanian_outlets():
+    assert not keywords.is_candidate("Lufta trondit buxhetin e Ukrainës, qeveria shkurton shpenzimet", "", "AL")
+    assert not keywords.is_candidate("Protesta në Prishtinë: qytetarët vazhdojnë", "", "AL")
+    # Albanian stories still pass, including when Rama is named alongside another country.
+    assert keywords.is_candidate("Qeveria miraton paketën e re fiskale", "", "AL")
+    assert keywords.is_candidate("Rama takon Trump në Nju Jork", "", "AL")
+    assert keywords.is_candidate("VKM-ja që i zhveshi mbrojtjen Nartës dërgohet në Kushtetuese", "", "AL")
+
+
+def test_etag_kept_after_not_modified(tmp_path):
+    from types import SimpleNamespace
+    conn = db.connect(str(tmp_path / "e.db"))
+    fetcher._record_ok(conn, "S", "u", SimpleNamespace(headers={"etag": "abc", "last-modified": "x"}), 1)
+    fetcher._record_ok(conn, "S", "u", SimpleNamespace(headers={}), 0)  # 304 without headers
+    row = conn.execute("SELECT etag, modified FROM feed_status").fetchone()
+    assert (row["etag"], row["modified"]) == ("abc", "x")

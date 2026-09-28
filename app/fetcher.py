@@ -138,8 +138,10 @@ def _record_ok(conn, name, url, resp, new_count):
     conn.execute(
         """INSERT INTO feed_status(source, url, etag, modified, last_ok_at, last_new)
            VALUES(?, ?, ?, ?, ?, ?)
-           ON CONFLICT(source) DO UPDATE SET url=excluded.url, etag=excluded.etag,
-             modified=excluded.modified, last_ok_at=excluded.last_ok_at, last_new=excluded.last_new""",
+           ON CONFLICT(source) DO UPDATE SET url=excluded.url,
+             etag=COALESCE(excluded.etag, feed_status.etag),
+             modified=COALESCE(excluded.modified, feed_status.modified),
+             last_ok_at=excluded.last_ok_at, last_new=excluded.last_new""",
         (name, url, resp.headers.get("etag"), resp.headers.get("last-modified"),
          iso(datetime.now(timezone.utc)), new_count),
     )

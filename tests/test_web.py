@@ -82,3 +82,19 @@ def test_seo_basics(client):
     assert "Sitemap:" in client.get("/robots.txt").text
     missing = client.get("/no-such-page")
     assert missing.status_code == 404 and "noindex" in missing.text
+
+
+def test_same_story_key_days_apart_is_two_groups(client):
+    from app import db as dbm, feed
+    with dbm.session() as conn:
+        conn.execute("INSERT INTO articles(url, title, title_norm, source, lang, published_at, fetched_at, ai_status, relevant, story_key, tags) "
+                     "VALUES('https://ex.al/old', 'Protesta e vjetër', 'protesta e vjeter', 'Old', 'sq', strftime('%Y-%m-%dT%H:%M:%SZ','now','-6 days'), "
+                     "strftime('%Y-%m-%dT%H:%M:%SZ','now'), 'done', 1, 'zvernec-protest', '[]')")
+        data = feed.query_groups(conn, "en", rng="30d")
+    keys = [g["key"] for g in data["groups"]]
+    assert "zvernec-protest" in keys and any(k.startswith("zvernec-protest@") for k in keys)
+
+
+def test_clean_result_without_story_key_does_not_group():
+    from app import ai
+    assert ai.clean_result({"relevant": False, "story_key": ""})["story_key"] is None

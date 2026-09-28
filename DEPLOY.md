@@ -205,7 +205,7 @@ before expiry, with no cron and no manual step. `www` redirects to the bare doma
 1. Go to https://console.anthropic.com → **API Keys → Create Key**, and name it
    `flamingo-watch`. Copy it; it's shown only once.
 2. **Set a spend limit as a second safety net:** Console → **Settings → Limits**
-   → set a monthly limit of **$6**. The app already stops itself at $5
+   → set a monthly limit of **$11**. The app already stops itself at $10
    (`AI_MONTHLY_BUDGET_USD`), so this only matters if something goes wrong.
 3. On the server, create the `.env` file (it is never committed to git):
 
@@ -266,7 +266,7 @@ Check the month's AI spend at any time:
 ```bash
 docker compose exec web python -m app.ai spend
 ```
-Prints the month, number of AI calls, estimated cost against the $5 budget, and whether the budget was hit.
+Prints the month, number of AI calls, estimated cost against the $10 budget, and whether the budget was hit.
 
 ---
 
@@ -357,15 +357,15 @@ the update command.
 | DigitalOcean Droplet (1 GiB, Frankfurt) | $6.00 |
 | DigitalOcean weekly backups (optional) | $1.20 |
 | Domain (.com at Cloudflare, $10.46/yr) | $0.87 |
-| Anthropic API (hard cap in the app) | ≤ $5.00 |
+| Anthropic API (hard cap in the app) | ≤ $10.00 |
 | Caddy / Let's Encrypt certificates | $0 |
 | UptimeRobot | $0 |
-| **Total (worst case)** | **≤ $13.07** |
+| **Total (worst case)** | **≤ $18.07** |
 
-That's under the $20 limit even in the worst case, with about $7 to spare.
+That's under the $20 limit even in the worst case, with about $2 to spare.
 
-**If you pay month to month on Akamai/Linode:** $5.00 server + $0.87 domain + at most $5.00 AI
-= **at most $10.87 a month**, paid monthly, with the domain paid yearly.
+**If you pay month to month on Akamai/Linode:** $5.00 server + $0.87 domain + at most $10.00 AI
+= **at most $15.87 a month**, paid monthly, with the domain paid yearly.
 
 **If you buy at Hostinger instead:**
 
@@ -373,9 +373,9 @@ That's under the $20 limit even in the worst case, with about $7 to spare.
 |---|---|---|
 | Hostinger KVM 1 (24-month term) | $6.49 | $11.99 |
 | Domain (.com, free year 1, then $19.99/yr) | $0 in year 1, then $1.67 | $1.67 (or $0.87 after moving to Cloudflare) |
-| Anthropic API (hard cap) | ≤ $5.00 | ≤ $5.00 |
+| Anthropic API (hard cap) | ≤ $10.00 | ≤ $10.00 |
 | Backups, HTTPS, monitoring | $0 | $0 |
-| **Total (worst case)** | **≤ $13.16** | **≤ $18.66** |
+| **Total (worst case)** | **≤ $18.16** | **≤ $23.66** |
 
-This stays under $20 even after the renewal price starts.
-At about $0.0025 per article, the $5 AI cap covers roughly 2,000 new articles a month.
+After the renewal price starts this can exceed $20 at the full $10 AI cap; lower `AI_MONTHLY_BUDGET_USD` if you move to Hostinger.
+At about $0.0015 per article (measured), the $10 AI cap covers roughly 6,000 new articles a month (about 200 a day).

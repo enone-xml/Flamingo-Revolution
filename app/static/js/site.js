@@ -287,7 +287,7 @@
         count > 1 ? h("span", { class: "card__count" }, fmt(I18N.n_sources, { n: count })) : null),
       h("h3", { class: "card__title" }, h("a", { href: a.url, rel: "noopener", target: "_blank", hreflang: a.lang }, a.title)),
       a.summary ? h("p", { class: "card__summary" }, a.summary) : h("p", { class: "card__note" }, I18N.no_summary),
-      a.ai && a.original_title !== a.title
+      a.ai && a.original_title && a.original_title !== a.title
         ? h("p", { class: "card__orig", lang: a.lang }, h("span", {}, I18N.original_headline + ":"), " " + a.original_title) : null,
       h("div", { class: "card__foot" }, tags,
         h("a", { class: "card__read", href: a.url, rel: "noopener", target: "_blank" }, fmt(I18N.read_original, { source: a.source }) + " ", h("span", { "aria-hidden": "true" }, "↗"))),
@@ -300,7 +300,7 @@
         h("ul", { class: "card__group", id, hidden: true }, g.articles.map((o) =>
           h("li", {}, h("a", { href: o.url, rel: "noopener", target: "_blank" },
             h("span", { class: "card__group-src" }, o.source), " ",
-            h("span", { class: "card__group-title", lang: o.lang }, o.original_title), " ",
+            h("span", { class: "card__group-title", lang: o.lang }, o.original_title || o.title), " ",
             h("time", { datetime: o.published_at, "data-ago": true }, ago(o.published_at)))))),
       );
     }
@@ -316,11 +316,22 @@
   const STATIC = document.body.dataset.static === "1";
   const RANGES = { "24h": 864e5, "7d": 7 * 864e5, "30d": 30 * 864e5 };
 
-  async function staticQuery(p, sinceId) {
-    const res = await fetch(`/data/articles-${ui}.json`, { cache: "no-cache" });
+  const cache = {};  // file name -> { data, at }
+  async function staticData(file, fresh) {
+    const c = cache[file];
+    if (c && !fresh && Date.now() - c.at < 55000) return c.data;  // reuse between filter clicks
+    const res = await fetch(`/data/${file}`, { cache: "no-cache" });
     if (!res.ok) throw new Error(res.status);
-    const all = await res.json();
+    const data = await res.json();
+    cache[file] = { data, at: Date.now() };
+    return data;
+  }
+
+  async function staticQuery(p, sinceId) {
     const tag = p.get("tag"), source = p.get("source"), lang = p.get("lang"), range = p.get("range") || "7d";
+    // 24h/7d use the small file; 30 days and "all" use the 30-day file.
+    const long = range === "30d" || range === "all";
+    const all = await staticData(`articles-${ui}${long ? "-30d" : ""}.json`, !!sinceId);
     const since = RANGES[range] ? Date.now() - RANGES[range] : 0;
     const keep = (a) => (!tag || a.tags.includes(tag)) && (!source || a.source === source)
       && (!lang || a.lang === lang) && Date.parse(a.published_at) >= since;

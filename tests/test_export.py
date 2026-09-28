@@ -11,7 +11,8 @@ def test_export_writes_complete_static_site(client, tmp_path):  # noqa: F811
     site = export.run(str(tmp_path / "out"))
     for f in ("index.html", "sq/index.html", "about.html", "sq/sources.html",
               "feed.xml", "sq/feed.xml", "_headers", "static/css/site.css",
-              "data/articles-en.json", "data/stats.json", "data/version.json"):
+              "data/articles-en.json", "data/articles-sq-30d.json", "data/stats.json",
+              "data/version.json", "sitemap.xml", "404.html"):
         assert (site / f).exists(), f
     html = (site / "index.html").read_text()
     assert 'data-static="1"' in html

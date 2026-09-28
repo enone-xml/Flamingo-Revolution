@@ -49,17 +49,31 @@ https://:project.pages.dev/*
 
 
 def _slim(article: dict) -> dict:
-    keys = ("id", "url", "source", "published_at", "lang", "title", "original_title", "summary", "tags", "ai")
-    return {k: article[k] for k in keys}
+    keys = ("id", "url", "source", "published_at", "lang", "title", "summary", "tags", "ai")
+    out = {k: article[k] for k in keys}
+    if article["original_title"] != article["title"]:
+        out["original_title"] = article["original_title"]  # only when it differs: smaller files
+    return out
 
 
-def _articles_json(conn, lang: str) -> dict:
-    data = feed.query_groups(conn, lang, rng="30d", per_page=100_000)
+def _articles_json(conn, lang: str, rng: str) -> dict:
+    data = feed.query_groups(conn, lang, rng=rng, per_page=100_000, max_rows=50_000)
     groups = [
         {"key": g["key"], "articles": [_slim(a) for a in g["articles"]]}
         for g in data["groups"]
     ]
     return {"groups": groups}
+
+
+def _code_hash() -> str:
+    """Changes whenever templates, CSS/JS or app code change, so a new version
+    of the site gets published even if no new articles arrived."""
+    h = hashlib.sha256()
+    here = Path(__file__).parent
+    for f in sorted(p for p in here.rglob("*") if p.is_file() and "__pycache__" not in p.parts):
+        h.update(f.relative_to(here).as_posix().encode())
+        h.update(f.read_bytes())
+    return h.hexdigest()[:12]
 
 
 def run(export_dir: str | None = None) -> Path:
@@ -97,12 +111,16 @@ def run(export_dir: str | None = None) -> Path:
     data_dir.mkdir()
     with db.session() as conn:
         stats = feed.stats(conn, len(main.source_list()))
-        articles = {lang: _articles_json(conn, lang) for lang in ("en", "sq")}
-    content_hash = hashlib.sha256()
-    for lang, payload in articles.items():
+        # A small 7-day file for the default view (what phones load), and a
+        # 30-day file only fetched when someone picks "30 days" or "All".
+        articles = {(lang, rng): _articles_json(conn, lang, rng)
+                    for lang in ("en", "sq") for rng in ("7d", "30d")}
+    content_hash = hashlib.sha256(_code_hash().encode())
+    for (lang, rng), payload in articles.items():
         payload["stats"] = stats
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-        (data_dir / f"articles-{lang}.json").write_text(body, encoding="utf-8")
+        suffix = "" if rng == "7d" else "-30d"
+        (data_dir / f"articles-{lang}{suffix}.json").write_text(body, encoding="utf-8")
         content_hash.update(json.dumps(payload["groups"], sort_keys=True).encode())
     (data_dir / "stats.json").write_text(json.dumps(stats))
     exported_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

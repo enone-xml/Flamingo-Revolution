@@ -1,6 +1,10 @@
 """Queries for the website: filtered, grouped articles and site stats."""
 import json
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+TIRANA = ZoneInfo("Europe/Tirane")
+GROUP_SPAN = timedelta(days=3)  # a story key only groups articles this close together
 
 RANGES = {"24h": timedelta(hours=24), "7d": timedelta(days=7), "30d": timedelta(days=30)}
 VISIBLE = "(a.relevant = 1 OR a.ai_status IN ('keyword_only', 'failed'))"
@@ -8,6 +12,11 @@ VISIBLE = "(a.relevant = 1 OR a.ai_status IN ('keyword_only', 'failed'))"
 
 def _iso(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _age_gap(newest: dict, older: dict) -> timedelta:
+    fmt = "%Y-%m-%dT%H:%M:%SZ"
+    return datetime.strptime(newest["published_at"], fmt) - datetime.strptime(older["published_at"], fmt)
 
 
 def article_dict(row, lang: str) -> dict:
@@ -35,7 +44,7 @@ def article_dict(row, lang: str) -> dict:
 
 
 def query_groups(conn, lang="en", tag=None, source=None, src_lang=None, rng="7d",
-                 page=1, per_page=20, since_id=None) -> dict:
+                 page=1, per_page=20, since_id=None, max_rows=2000) -> dict:
     """Return story groups, newest first. Articles sharing a story_key are one group."""
     where, args = [VISIBLE], []
     if rng in RANGES:
@@ -52,14 +61,16 @@ def query_groups(conn, lang="en", tag=None, source=None, src_lang=None, rng="7d"
         args.append(src_lang)
     rows = conn.execute(
         f"SELECT a.* FROM articles a WHERE {' AND '.join(where)} "
-        "ORDER BY a.published_at DESC LIMIT 2000",
-        args,
+        "ORDER BY a.published_at DESC LIMIT ?",
+        (*args, max_rows),
     ).fetchall()
 
     groups, index = [], {}
     for row in rows:
         art = article_dict(row, lang)
         key = art["story_key"] or f"id-{art['id']}"
+        if key in index and _age_gap(groups[index[key]]["articles"][0], art) > GROUP_SPAN:
+            key = f"{key}@{art['published_at'][:10]}"  # same slug, different event days apart
         if key in index:
             groups[index[key]]["articles"].append(art)
         else:
@@ -86,7 +97,9 @@ def query_groups(conn, lang="en", tag=None, source=None, src_lang=None, rng="7d"
 
 
 def stats(conn, source_count: int) -> dict:
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00Z")
+    # "Today" as people in Albania count it, not UTC.
+    midnight = datetime.now(TIRANA).replace(hour=0, minute=0, second=0, microsecond=0)
+    today = _iso(midnight.astimezone(timezone.utc))
     today_count = conn.execute(
         f"SELECT COUNT(*) FROM articles a WHERE {VISIBLE} AND a.published_at >= ?", (today,)
     ).fetchone()[0]

@@ -12,7 +12,7 @@ FETCH_INTERVAL_MINUTES = int(os.getenv("FETCH_INTERVAL_MINUTES", "10"))
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 AI_MODEL = os.getenv("AI_MODEL", "claude-haiku-4-5-20251001")
 AI_MODE = os.getenv("AI_MODE", "real")  # "real", "fake" or "off"
-AI_MONTHLY_BUDGET_USD = float(os.getenv("AI_MONTHLY_BUDGET_USD", "5"))
+AI_MONTHLY_BUDGET_USD = float(os.getenv("AI_MONTHLY_BUDGET_USD", "10"))
 
 USER_AGENT = f"FlamingoWatchBot/1.0 (+{SITE_URL}/about)"
 
