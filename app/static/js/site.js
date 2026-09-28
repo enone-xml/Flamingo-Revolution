@@ -92,13 +92,14 @@
 
   // While the menu is open, everything behind it is unreachable (keyboard, clicks, screen readers).
   function setInert(on) {
-    ["main", ".footer", ".ticker", ".skip"].forEach((sel) => { const el = $(sel); if (el) el.inert = on; });
+    ["main", ".footer", ".ticker", ".skip", ".bottom-nav"].forEach((sel) => { const el = $(sel); if (el) el.inert = on; });
   }
 
   function openMenu() {
     lastFocus = document.activeElement;
     menu.hidden = false;
     setInert(true);
+    $(".topbar").classList.remove("is-hidden");
     document.body.classList.add("menu-open");
     doc.classList.add("menu-open");
     menuBtn.setAttribute("aria-expanded", "true");
@@ -144,8 +145,24 @@
   }
 
   // ------------------------------------------------------------ page transitions
+  // Browsers with native cross-document View Transitions animate page changes
+  // themselves (CSS @view-transition); the others get the pink curtain.
+  const nativeVT = "PageRevealEvent" in window;
+  if (motion && nativeVT) {
+    // The tapped card's title grows into the story page's headline.
+    document.addEventListener("click", (e) => {
+      if (e.defaultPrevented) return;
+      const a = e.target.closest('a[href*="/story/"]');
+      const box = a && a.closest(".card, .timeline__event");
+      const title = box && $(".card__title, .timeline__title", box);
+      if (title) title.style.viewTransitionName = "story-title";
+    });
+    window.addEventListener("pageshow", () => {
+      $$("[style*='view-transition-name']").forEach((el) => { el.style.viewTransitionName = ""; });
+    });
+  }
   const curtain = $(".transition");
-  if (motion && curtain) {
+  if (motion && curtain && !nativeVT) {
     gsap.fromTo(curtain, { scaleY: 1, transformOrigin: "top" }, { scaleY: 0, duration: 0.6, ease: "expo.inOut" });
     document.addEventListener("click", (e) => {
       // Skip clicks another handler already took care of (e.g. "Load more" fetching in place).
@@ -297,6 +314,40 @@
     };
     loop();
   }
+
+  // ------------------------------------------------------------ phones: header + bottom bar
+  const phone = window.matchMedia("(max-width: 959px)");
+  const topbar = $(".topbar");
+  if (topbar && !reduced) {
+    // Hide the header while reading down, bring it back when scrolling up.
+    let lastY = window.scrollY, ticking = false;
+    window.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY, delta = y - lastY;
+        const keep = !phone.matches || doc.classList.contains("menu-open") || topbar.contains(document.activeElement);
+        if (keep || y < 80 || delta < -6) topbar.classList.remove("is-hidden");
+        else if (delta > 6 && y > 160) topbar.classList.add("is-hidden");
+        if (Math.abs(delta) > 6) lastY = y;
+        ticking = false;
+      });
+    }, { passive: true });
+    topbar.addEventListener("focusin", () => topbar.classList.remove("is-hidden"));
+  }
+
+  // "Search" in the bottom bar: jump to the search box and put the cursor in it.
+  function focusSearch() {
+    const input = $("#search input");
+    if (!input) return;
+    input.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
+    input.focus({ preventScroll: true });
+  }
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('.bottom-nav__item[data-nav="search"]');
+    if (a && $("#search input")) { e.preventDefault(); focusSearch(); history.replaceState(null, "", "#search"); }
+  });
+  if (location.hash === "#search") window.addEventListener("load", focusSearch);
 
   // ------------------------------------------------------------ share
   // Phones: the system share sheet (WhatsApp, Telegram…). Elsewhere: copy the link.
@@ -544,6 +595,36 @@
     load();
   });
   form.addEventListener("submit", (e) => { e.preventDefault(); form.dispatchEvent(new Event("change")); });
+
+  // Topic chips: one pink highlight that glides to the chosen chip.
+  const chipRow = $(".filters__tags", form);
+  if (chipRow && window.CSS && CSS.supports("width", "1px")) {
+    const glider = h("span", { class: "filters__glider", "aria-hidden": "true" });
+    chipRow.prepend(glider);
+    chipRow.classList.add("has-glider");
+    const moveGlider = (animate) => {
+      const chosen = $("input:checked + span", chipRow);
+      if (!chosen) { glider.style.width = "0"; return; }
+      if (!animate) glider.style.transition = "none";
+      glider.style.width = `${chosen.offsetWidth}px`;
+      glider.style.height = `${chosen.offsetHeight}px`;
+      // the span sits inside its .chip label, which is what the row positions
+      const x = chosen.parentElement.offsetLeft + chosen.offsetLeft;
+      const y = chosen.parentElement.offsetTop + chosen.offsetTop;
+      glider.style.transform = `translate(${x}px, ${y}px)`;
+      if (!animate) requestAnimationFrame(() => { glider.style.transition = ""; });
+      // keep the chosen chip in view in the sideways-scrolling row
+      const left = x - 16;
+      if (left < chipRow.scrollLeft || x + chosen.offsetWidth > chipRow.scrollLeft + chipRow.clientWidth) {
+        chipRow.scrollTo({ left, behavior: reduced ? "auto" : "smooth" });
+      }
+    };
+    moveGlider(false);
+    chipRow.addEventListener("change", () => moveGlider(!reduced));
+    form.addEventListener("reset", () => requestAnimationFrame(() => moveGlider(!reduced)));
+    window.addEventListener("resize", () => moveGlider(false));
+    if (document.fonts) document.fonts.ready.then(() => moveGlider(false));
+  }
   let searchTimer;
   const searchBox = form.elements.q;
   if (searchBox) searchBox.addEventListener("input", () => {

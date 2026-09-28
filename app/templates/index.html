@@ -80,7 +80,7 @@
       <label class="chip chip--{{ tag|lower }}"><input type="radio" name="tag" value="{{ tag }}" {% if filters.tag == tag %}checked{% endif %}><span>{{ tag_label(tag) }}</span></label>
       {% endfor %}
     </fieldset>
-    <label class="search"><span>{{ t('search') }}</span>
+    <label class="search" id="search"><span>{{ t('search') }}</span>
       <input type="search" name="q" value="{{ filters.q or '' }}" placeholder="{{ t('search_placeholder') }}" maxlength="100" autocomplete="off" enterkeyhint="search">
     </label>
     <div class="filters__row">

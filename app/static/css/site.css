@@ -123,7 +123,7 @@ h1, h2, h3 { margin: 0; }
 
 /* ---------------------------------------------------------------- topbar */
 .topbar {
-  position: sticky; top: 0; z-index: 40;
+  position: sticky; top: 0; z-index: 40; view-transition-name: topbar;
   display: flex; align-items: center; justify-content: space-between;
   height: var(--topbar-h); padding: 0 var(--gutter);
   background: rgba(10, 10, 10, .86);
@@ -256,6 +256,8 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
   right: -8%; bottom: 3.5rem; width: 58vw; max-width: 420px; height: auto; opacity: .22;
 }
 .hero__bird-draw { display: none; }
+.motion .hero__bird { display: none; }                         /* JS + motion: draw it instead */
+.motion .hero__bird-draw { display: block; opacity: .35; }
 .hero__tape {
   position: absolute; left: -5%; right: -5%; bottom: 1.6rem; z-index: 3;
   display: block; overflow: hidden; transform: rotate(-3deg);
@@ -563,8 +565,7 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 @media (min-width: 960px) {
   .hero { padding-bottom: 8rem; }
   .hero__bird { opacity: .9; right: 4%; bottom: 5rem; width: 30vw; max-width: 430px; }
-  .motion .hero__bird { display: none; }
-  .motion .hero__bird-draw { display: block; opacity: 1; right: 4%; bottom: 5rem; width: 30vw; max-width: 430px; }
+  .motion .hero__bird-draw { opacity: 1; right: 4%; bottom: 5rem; width: 30vw; max-width: 430px; }
   .intro { grid-template-columns: 5fr 7fr; gap: 4rem; padding-top: 7rem; padding-bottom: 7rem; }
   .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .card--featured { grid-column: span 2; }
@@ -579,6 +580,82 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
   .hero__tape-inner { width: auto; }
   .motion [data-reveal], .motion .card.pre-reveal { opacity: 1; transform: none; }
   .hero__particles, .cursor { display: none !important; }
+  .topbar.is-hidden { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+
+/* ---------------------------------------------------------------- page transitions (native) */
+/* Browsers with cross-document View Transitions animate between pages themselves;
+   others just load the next page. Turned off for "reduce motion". */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: 160ms ease-out both vt-fade-out; }
+::view-transition-new(root) { animation: 280ms cubic-bezier(.2, .8, .2, 1) both vt-rise-in; }
+::view-transition-group(story-title), ::view-transition-group(nav-marker) { animation-duration: 340ms; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-rise-in { from { opacity: 0; transform: translateY(14px); } }
+.story__title { view-transition-name: story-title; }   /* the tapped card's title grows into this */
+
+/* ---------------------------------------------------------------- phone polish */
+.card { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) {
+  /* 3. touch feedback: the card presses in and the pink edge sweeps in */
+  .card:active { transform: scale(.985); background: var(--card-2); }
+  .card:active::before { transform: scaleY(1); }
+}
+
+/* 7. topic chips: one pink highlight that glides to the chosen chip (added by JS) */
+.filters__tags.has-glider { position: relative; }
+.filters__glider {
+  position: absolute; left: 0; top: 0; z-index: 0; border-radius: 999px; background: var(--pink);
+  pointer-events: none; transition: transform .4s var(--ease), width .4s var(--ease);
+}
+.has-glider .chip span { position: relative; z-index: 1; background: transparent; }
+.has-glider .chip input:checked + span { background: transparent; transition: color .25s .1s; }
+
+/* 6. progress line under the header, driven by the scroll position (no JS) */
+.topbar__progress { display: none; }
+
+/* 8. bottom bar for thumbs */
+.bottom-nav { display: none; }
+
+@media (max-width: 959px) {
+  /* 6. the header slides away while reading down, back when scrolling up */
+  .topbar { transition: transform .3s var(--ease); }
+  .topbar.is-hidden { transform: translateY(-100%); }
+  @supports (animation-timeline: scroll()) {
+    .topbar__progress {
+      display: block; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--pink);
+      transform-origin: 0 50%; transform: scaleX(0);
+      animation: scroll-progress linear both; animation-timeline: scroll(root block);
+    }
+    @keyframes scroll-progress { to { transform: scaleX(1); } }
+  }
+
+  .bottom-nav {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 34; view-transition-name: bottom-nav;
+    padding: .25rem .5rem calc(.25rem + env(safe-area-inset-bottom));
+    background: rgba(10, 10, 10, .94); border-top: 1px solid var(--line);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: transform .25s var(--ease);
+  }
+  /* out of the way while typing (the keyboard needs the space) */
+  body:has(input:focus, select:focus, textarea:focus) .bottom-nav { transform: translateY(110%); }
+  .bottom-nav__item {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .2rem;
+    min-height: 52px; color: var(--muted); text-decoration: none;
+    font: 600 .66rem/1.1 var(--body); letter-spacing: .06em; text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent; transition: color .2s;
+  }
+  .bottom-nav__item svg { width: 22px; height: 22px; transition: transform .25s var(--ease); }
+  .bottom-nav__item:active svg { transform: scale(.88); }
+  .bottom-nav__item[aria-current="page"] { color: var(--pink); }
+  .bottom-nav__marker {
+    position: absolute; top: 0; left: 50%; width: 28px; height: 3px; margin-left: -14px;
+    border-radius: 0 0 3px 3px; background: var(--pink); view-transition-name: nav-marker;
+  }
+  body { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
 
 /* ---------------------------------------------------------------- Windows high contrast / forced colours */
@@ -588,4 +665,7 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
   .card, .select select, .search input, .btn, .card__share, .menu-btn, .lang-switch { border: 1px solid CanvasText; }
   .lang-switch__on { outline: 2px solid Highlight; }
   :focus-visible { outline: 3px solid Highlight; }
+  .filters__glider { display: none; }
+  .has-glider .chip input:checked + span { border: 2px solid Highlight; }
+  .bottom-nav__marker { background: Highlight; }
 }

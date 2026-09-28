@@ -66,6 +66,7 @@
   </div>
 
   <header class="topbar">
+    <span class="topbar__progress" aria-hidden="true"></span>
     <a class="brand" href="{{ url('/') }}">
       <img src="/static/img/flamingo.svg?v={{ v }}" alt="" width="22" height="37">
       <span>{{ t('site_name') }}</span>
@@ -113,6 +114,24 @@
       {% if not static %}<a href="/api/articles">JSON API</a>{% endif %}
     </p>
   </footer>
+
+  {# Phones: thumb-reachable shortcuts (hidden on larger screens by CSS). Plain links, so
+     they work without JavaScript; "Search" jumps to the search box on the feed. #}
+  {% set current = {'home': 'feed', 'digest': 'digest', 'timeline': 'timeline'}.get(page) %}
+  <nav class="bottom-nav" aria-label="{{ t('quick_nav') }}">
+    {% for key, label, href, icon in [
+      ('feed', t('nav_feed_short'), url('/') ~ '#feed', 'M4 6h16M4 12h16M4 18h10'),
+      ('search', t('search'), url('/') ~ '#search', 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM15.5 15.5 20 20'),
+      ('digest', t('nav_digest_short'), url('/digest'), 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5'),
+      ('timeline', t('nav_timeline'), url('/timeline'), 'M7 4v16M7 7h10M7 12h7M7 17h9'),
+    ] %}
+    <a class="bottom-nav__item" href="{{ href }}" data-nav="{{ key }}"{% if current == key %} aria-current="page"{% endif %}>
+      {% if current == key %}<span class="bottom-nav__marker" aria-hidden="true"></span>{% endif %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="{{ icon }}"/></svg>
+      <span>{{ label }}</span>
+    </a>
+    {% endfor %}
+  </nav>
 
   <div class="transition" aria-hidden="true"></div>
   <div class="cursor" aria-hidden="true"></div>
