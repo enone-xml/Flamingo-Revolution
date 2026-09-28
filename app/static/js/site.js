@@ -312,15 +312,53 @@
     if (first && window.innerWidth >= 960) first.classList.add("card--featured");
   }
 
+  // ---- data source: live API (server) or pre-built JSON files (static site)
+  const STATIC = document.body.dataset.static === "1";
+  const RANGES = { "24h": 864e5, "7d": 7 * 864e5, "30d": 30 * 864e5 };
+
+  async function staticQuery(p, sinceId) {
+    const res = await fetch(`/data/articles-${ui}.json`, { cache: "no-cache" });
+    if (!res.ok) throw new Error(res.status);
+    const all = await res.json();
+    const tag = p.get("tag"), source = p.get("source"), lang = p.get("lang"), range = p.get("range") || "7d";
+    const since = RANGES[range] ? Date.now() - RANGES[range] : 0;
+    const keep = (a) => (!tag || a.tags.includes(tag)) && (!source || a.source === source)
+      && (!lang || a.lang === lang) && Date.parse(a.published_at) >= since;
+    const groups = [];
+    for (const g of all.groups) {
+      const arts = g.articles.filter(keep);
+      if (!arts.length) continue;
+      groups.push({
+        ...g, articles: arts, lead: arts[0],
+        max_id: Math.max(...arts.map((a) => a.id)),
+        sources: [...new Set(arts.map((a) => a.source))].sort(),
+        tags: [...new Set(arts.flatMap((a) => a.tags))].sort(),
+      });
+    }
+    const per = parseInt(p.get("per_page") || "20", 10), pg = parseInt(p.get("page") || "1", 10);
+    return {
+      groups: groups.slice((pg - 1) * per, pg * per),
+      has_more: pg * per < groups.length,
+      new_since: sinceId ? groups.filter((g) => g.max_id > sinceId).length : 0,
+      stats: all.stats,
+    };
+  }
+
+  async function query(p, sinceId) {
+    if (STATIC) return staticQuery(p, sinceId);
+    if (sinceId) p.set("since_id", String(sinceId));
+    const res = await fetch(`/api/articles?${p}`, { headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+  }
+
   async function load({ append = false } = {}) {
     const p = filterParams();
     p.set("ui", ui);
     p.set("page", String(page));
     cards.setAttribute("aria-busy", "true");
     try {
-      const res = await fetch(`/api/articles?${p}`, { headers: { Accept: "application/json" } });
-      if (!res.ok) throw new Error(res.status);
-      const data = await res.json();
+      const data = await query(p);
       if (!append) cards.replaceChildren();
       const els = data.groups.map((g, i) => cardEl(g, !append && i === 0 && window.innerWidth >= 960));
       if (!append && !els.length) cards.append(h("p", { class: "cards__empty" }, I18N.empty));
@@ -382,11 +420,16 @@
   async function poll() {
     if (document.hidden) return;
     const p = filterParams();
-    p.set("ui", ui); p.set("since_id", String(maxId)); p.set("per_page", "1");
+    p.set("ui", ui); p.set("per_page", "1");
     try {
-      const res = await fetch(`/api/articles?${p}`);
-      if (!res.ok) return;
-      const data = await res.json();
+      if (STATIC) { // cheap check first: only download articles when something is new
+        const res = await fetch("/data/stats.json", { cache: "no-cache" });
+        if (!res.ok) return;
+        const st = await res.json();
+        updateStats(st);
+        if (st.max_id <= maxId) return;
+      }
+      const data = await query(p, maxId);
       updateStats(data.stats);
       if (data.new_since > 0) {
         newBtn.textContent = fmt(I18N.new_items, { n: data.new_since });
@@ -406,4 +449,19 @@
   markFeatured();
   revealCards($$(".card", cards));
   refreshTimes();
+
+  // A static host ignores ?tag=... in the URL, so apply shared filter links here.
+  if (STATIC) {
+    const q = new URLSearchParams(location.search);
+    let changed = false;
+    for (const [k, v] of q.entries()) {
+      const field = form.elements[k];
+      if (!field || !v) continue;
+      if (field instanceof RadioNodeList) {
+        const r = [...field].find((x) => x.value === v);
+        if (r) { r.checked = true; changed = true; }
+      } else if ([...(field.options || [])].some((o) => o.value === v)) { field.value = v; changed = true; }
+    }
+    if (changed) load();
+  }
 })();

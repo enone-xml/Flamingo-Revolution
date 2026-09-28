@@ -7,10 +7,29 @@ services:
       - "127.0.0.1:${HOST_PORT:-8080}:8000"
     volumes:
       - flamingo-data:/data
+      - site-export:/export
     restart: unless-stopped
     logging:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}
 
+  # Uploads the static site to Cloudflare Pages. Only starts when .env has
+  # COMPOSE_PROFILES=publish (see STATIC-HOSTING.md).
+  publisher:
+    build:
+      context: .
+      dockerfile: deploy/publisher.Dockerfile
+    image: flamingo-publisher:latest
+    profiles: ["publish"]
+    env_file: .env
+    depends_on: [web]
+    volumes:
+      - site-export:/export:ro
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "2"}
+
 volumes:
   flamingo-data:
+  site-export:

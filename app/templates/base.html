@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#0A0A0A">
   <meta name="color-scheme" content="dark">
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-  <link rel="alternate" type="application/rss+xml" title="{{ t('site_name') }}" href="/feed.xml?lang={{ lang }}">
+  <link rel="alternate" type="application/rss+xml" title="{{ t('site_name') }}" href="{{ rss_url }}">
   <link rel="alternate" hreflang="en" href="{{ site_url }}{{ path }}">
   <link rel="alternate" hreflang="sq" href="{{ site_url }}/sq{{ path }}">
   <link rel="preload" href="/static/fonts/Anton-400-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -19,7 +19,7 @@
   <meta property="og:description" content="{{ t('tagline') }}">
   <meta property="og:type" content="website">
 </head>
-<body class="page-{{ page }}">
+<body class="page-{{ page }}"{% if static %} data-static="1"{% endif %}>
   <a class="skip" href="{% if page == 'home' %}#feed{% else %}#main{% endif %}">{{ t('skip') }}</a>
 
   <div class="ticker" aria-label="{{ t('latest') }}">
@@ -56,7 +56,7 @@
         <li><a href="{{ url('/') }}#feed"><span class="menu__num">01</span><span class="menu__text">{{ t('nav_feed') }}</span></a></li>
         <li><a href="{{ url('/about') }}"><span class="menu__num">02</span><span class="menu__text">{{ t('nav_about') }}</span></a></li>
         <li><a href="{{ url('/sources') }}"><span class="menu__num">03</span><span class="menu__text">{{ t('nav_sources') }}</span></a></li>
-        <li><a href="/feed.xml?lang={{ lang }}"><span class="menu__num">04</span><span class="menu__text">{{ t('nav_rss') }}</span></a></li>
+        <li><a href="{{ rss_url }}"><span class="menu__num">04</span><span class="menu__text">{{ t('nav_rss') }}</span></a></li>
         <li><a href="{{ switch_url }}" lang="{{ 'sq' if lang == 'en' else 'en' }}"><span class="menu__num">05</span><span class="menu__text">{{ t('switch_lang') }}</span></a></li>
       </ol>
     </nav>
@@ -73,8 +73,8 @@
     <p class="footer__links">
       <a href="{{ url('/about') }}">{{ t('nav_about') }}</a>
       <a href="{{ url('/sources') }}">{{ t('nav_sources') }}</a>
-      <a href="/feed.xml?lang={{ lang }}">RSS</a>
-      <a href="/api/articles">JSON API</a>
+      <a href="{{ rss_url }}">RSS</a>
+      {% if not static %}<a href="/api/articles">JSON API</a>{% endif %}
     </p>
   </footer>
 

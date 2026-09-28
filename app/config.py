@@ -21,3 +21,7 @@ AI_PRICE_INPUT_PER_M = float(os.getenv("AI_PRICE_INPUT_PER_M", "1.0"))
 AI_PRICE_OUTPUT_PER_M = float(os.getenv("AI_PRICE_OUTPUT_PER_M", "5.0"))
 AI_MAX_PER_RUN = int(os.getenv("AI_MAX_PER_RUN", "40"))
 RUN_SCHEDULER = os.getenv("RUN_SCHEDULER", "1") == "1"
+
+# Static-site mode: when EXPORT_DIR is set, every pipeline run also writes a
+# complete static copy of the site there, for publishing to free static hosting.
+EXPORT_DIR = os.getenv("EXPORT_DIR", "")

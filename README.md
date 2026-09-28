@@ -8,6 +8,12 @@ bilingual (EN/SQ) titles and summaries, and shows everything in one feed.
 It doesn't fact-check or label outlets. It stores only the headline, source,
 time, link and its own short summary.
 
+## Two ways to host it
+
+- **Run on your PC and publish for free** (no server needed): see [STATIC-HOSTING.md](STATIC-HOSTING.md).
+  Your PC fetches the news and uploads a static copy to Cloudflare Pages every 10 minutes.
+- **Run on a small server** ($5–6 a month, updates around the clock): see [DEPLOY.md](DEPLOY.md).
+
 ## Run it locally
 
 ```bash
@@ -82,7 +88,10 @@ a second safety net (see DEPLOY.md, step 5).
 | `app/ai.py` | Claude Haiku step, budget guard, `spend` command |
 | `app/main.py` | Web pages, `/feed.xml`, `/api/articles`, `/health` |
 | `app/templates`, `app/static` | Design: HTML, CSS, JS, fonts, GSAP/Lenis (self-hosted) |
-| `DEPLOY.md` | Step-by-step production deploy, backups, monitoring, costs |
+| `app/export.py` | Builds the static copy of the site (pages, JSON, RSS) |
+| `deploy/publish-loop.sh` | Uploads that copy to Cloudflare Pages when the news changes |
+| `DEPLOY.md` | Step-by-step server deploy, backups, monitoring, costs |
+| `STATIC-HOSTING.md` | Step-by-step free static hosting from your PC |
 
 ## API
 

@@ -272,8 +272,9 @@ Prints the month, number of AI calls, estimated cost against the $4 budget, and 
 
 ## 7. Backups
 
-The backup command makes a safe copy of the SQLite file while the app runs and
-keeps the last 14, in the `flamingo-data` volume under `/data/backups`.
+The app makes a backup by itself every day at 03:00 UTC. It's a safe copy of the SQLite
+file taken while the app runs, and it keeps the last 14 in the `flamingo-data` volume
+under `/data/backups`. The cron job below is an optional second copy.
 
 ```bash
 crontab -e

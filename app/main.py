@@ -92,6 +92,8 @@ def render(request: Request, name: str, lang: str, page: str, path: str, **ctx):
         "site_url": config.SITE_URL,
         "path": path,
         "v": ASSET_VERSION,
+        "static": request.headers.get("x-static-export") == "1",
+        "rss_url": "/feed.xml" if lang == "en" else "/sq/feed.xml",
         "tag_labels": {tag: i18n.tag_label(lang, tag) for tag in ai.TAGS},
     }
     if "ticker" not in ctx:
@@ -200,6 +202,15 @@ def api_stats():
 
 @app.get("/feed.xml")
 def rss(lang: str = "en"):
+    return build_rss(lang)
+
+
+@app.get("/sq/feed.xml")
+def rss_sq():
+    return build_rss("sq")
+
+
+def build_rss(lang: str) -> Response:
     lang = lang if lang in i18n.LANGS else "en"
     with db.session() as conn:
         items = feed.latest(conn, lang, 50)
@@ -210,7 +221,7 @@ def rss(lang: str = "en"):
         f"<link>{escape(config.SITE_URL + lang_url(lang))}</link>",
         f"<description>{escape(i18n.t(lang, 'tagline'))}</description>",
         f"<language>{lang}</language>",
-        f'<atom:link href="{escape(config.SITE_URL)}/feed.xml?lang={lang}" rel="self" type="application/rss+xml"/>',
+        f'<atom:link href="{escape(config.SITE_URL + ("/feed.xml" if lang == "en" else "/sq/feed.xml"))}" rel="self" type="application/rss+xml"/>',
     ]
     for a in items:
         pub = datetime.strptime(a["published_at"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)

@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-RUN useradd --create-home --uid 1000 app && mkdir -p /data && chown app:app /data
+RUN useradd --create-home --uid 1000 app && mkdir -p /data /export && chown app:app /data /export
 USER app
 
 EXPOSE 8000

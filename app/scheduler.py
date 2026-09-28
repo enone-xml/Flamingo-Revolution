@@ -21,6 +21,20 @@ def pipeline() -> None:
         pass
     except Exception:
         log.exception("AI run failed")
+    if config.EXPORT_DIR:
+        try:
+            from . import export
+            export.run()
+        except Exception:
+            log.exception("static export failed")
+
+
+def daily_backup() -> None:
+    try:
+        from . import backup
+        log.info("backup written: %s", backup.run())
+    except Exception:
+        log.exception("daily backup failed")
 
 
 def start() -> BackgroundScheduler:
@@ -30,6 +44,7 @@ def start() -> BackgroundScheduler:
         next_run_time=datetime.now(timezone.utc),  # also run right away on start
         max_instances=1, coalesce=True, id="pipeline",
     )
+    sched.add_job(daily_backup, "cron", hour=3, minute=0, id="backup", coalesce=True)
     sched.start()
     log.info("scheduler started, every %d minutes", config.FETCH_INTERVAL_MINUTES)
     return sched
