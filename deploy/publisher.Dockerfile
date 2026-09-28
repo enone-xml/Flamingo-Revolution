@@ -5,4 +5,5 @@ RUN npm install -g wrangler@4 && npm cache clean --force \
  && rm -rf /var/lib/apt/lists/*
 COPY deploy/publish-loop.sh /usr/local/bin/publish-loop.sh
 USER node
+WORKDIR /home/node
 CMD ["/usr/local/bin/publish-loop.sh"]
