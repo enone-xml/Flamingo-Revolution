@@ -15,6 +15,7 @@ again before you buy.
 |---|---|---|---|
 | **DigitalOcean Basic Droplet** (recommended) | 1 vCPU, 1 GiB RAM, 25 GiB SSD, 1,000 GiB traffic | **$6.00** | A $4 plan (512 MiB) also exists but is tight for Docker + Python. Weekly backups add 20% ($1.20). Frankfurt (FRA1) is closest to Albania. |
 | Hetzner Cloud | CX23: 2 vCPU, 4 GB, 40 GB | €5.99 | Listed as **"not available"** on 2026-09-28. The next plan you can actually order (CPX12) costs €11.99, which breaks the budget. |
+| Hostinger VPS KVM 1 | 1 vCPU, 4 GB RAM, 50 GB NVMe, 4 TB traffic, free weekly backups, **free .com for 1 year** | $6.49 (24-month term, $155.76 upfront) | Renews at $11.99/mo. A 12-month term is $6.99/mo ($83.88), renewing at $12.99. Monthly billing is $9.99, renewing at $19.49. |
 | Render | Web service, 512 MB RAM, <1 CPU, plus 1 GB disk for SQLite | $7.00 + $0.25 | The free tier sleeps when idle and has no persistent disk, so the fetcher can't run. It's also more expensive than a VPS. |
 
 **Recommendation: a DigitalOcean $6 Droplet in Frankfurt.** It fits the ≤ $7
@@ -34,6 +35,43 @@ DigitalOcean-specific except step 1.1.
 3. Networking → Firewalls → create a firewall that allows inbound
    **TCP 22, 80, 443** and **UDP 443**, and apply it to the droplet.
 4. Note the droplet's **public IPv4** (and IPv6 if you enabled it).
+
+### 1.1b Or: buy the server and domain at Hostinger
+
+If you prefer Hostinger, this is the cheapest way to buy there (prices as of 2026-09-28; hPanel menu names can differ slightly):
+
+1. Go to **hostinger.com → VPS hosting**, and under **KVM 1** click **Choose plan**.
+   KVM 1 is plenty: the app uses well under 1 GB of RAM.
+2. In the cart, set **Period: 24 months** ($6.49/mo, $155.76 paid upfront).
+   The cart confirms "You get a FREE domain for 1 year with this order."
+   A 12-month term ($6.99/mo, $83.88) is fine if you'd rather pay less upfront.
+   Avoid 1 month: it costs $9.99 and renews at $19.49.
+3. **Leave "Daily auto-backup" ($3/mo) unticked.** Weekly VPS backups are
+   already free, and the app makes its own daily database backups (step 7).
+4. **Server location:** pick **Germany**, or whichever European location the cart
+   shows with the lowest latency.
+5. **What to install:** choose **Plain OS → Ubuntu 24.04**. Don't pick the Docker
+   or panel templates; step 1.2 installs Docker for you.
+6. Click **Continue**, create your account, and pay. VAT may be added at
+   checkout depending on your country. Don't pay for extras such as email,
+   SSL or site builders: Caddy gives free HTTPS.
+7. After payment, hPanel asks you to **set a root password** and offers to
+   **add an SSH key**. Add your key (`cat ~/.ssh/id_ed25519.pub` on WSL; create one
+   with `ssh-keygen -t ed25519` if needed).
+8. **Claim the free domain:** in hPanel go to **Domains** and use the free-domain
+   voucher to register your **.com**. Turn on the free WHOIS privacy protection if it
+   isn't already on.
+9. **Firewall:** in hPanel go to **VPS → Security → Firewall**, create a rule set that
+   allows **TCP 22, 80, 443** and **UDP 443**, and drop everything else.
+10. Note the VPS **IPv4 address** (and IPv6) from the VPS overview page.
+
+**About the domain renewal:** the free .com renews at **$19.99/year** at Hostinger.
+Cloudflare charges $10.46. Before the first year ends, you can transfer the domain
+to Cloudflare Registrar. The transfer includes one more year at $10.46, which saves
+about $9.50 a year. Or you can just let Hostinger renew it; the total stays under budget
+either way (see step 10).
+
+Then continue with step 1.2. It's the same on any Ubuntu server.
 
 ### 1.2 Prepare the server
 
@@ -112,6 +150,11 @@ In Cloudflare: your domain → **DNS → Records → Add record**:
 | A | `www` | YOUR_SERVER_IPv4 | DNS only |
 | AAAA | `@` | YOUR_SERVER_IPv6 (only if the droplet has one) | DNS only |
 | AAAA | `www` | YOUR_SERVER_IPv6 (only if the droplet has one) | DNS only |
+
+**If your domain is at Hostinger:** in hPanel go to **Domains → your domain → DNS / Nameservers →
+DNS records**. **Delete** any existing `A` records for `@` and `www`, and any
+`CNAME` for `www`, since those point to Hostinger's parking page. Then add the
+records above. Hostinger has no proxy, so ignore that column.
 
 Keep them **DNS only** so Caddy can get its certificate directly. You can
 switch on the orange-cloud proxy later if you want; if you do, set
@@ -300,4 +343,16 @@ the update command.
 | **Total (worst case)** | **≤ $12.07** |
 
 That's under the $20 limit even in the worst case, with about $8 to spare.
+
+**If you buy at Hostinger instead:**
+
+| Item | Years 1–2 | After renewal |
+|---|---|---|
+| Hostinger KVM 1 (24-month term) | $6.49 | $11.99 |
+| Domain (.com, free year 1, then $19.99/yr) | $0 in year 1, then $1.67 | $1.67 (or $0.87 after moving to Cloudflare) |
+| Anthropic API (hard cap) | ≤ $4.00 | ≤ $4.00 |
+| Backups, HTTPS, monitoring | $0 | $0 |
+| **Total (worst case)** | **≤ $12.16** | **≤ $17.66** |
+
+This stays under $20 even after the renewal price starts.
 At about $0.002 per article, the AI cap covers roughly 2,000 new articles a month.
