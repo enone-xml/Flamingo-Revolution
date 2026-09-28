@@ -11,7 +11,7 @@
     <ol class="timeline__list">
       {% for e in m.events %}
       <li class="timeline__event{% if e.manual %} timeline__event--milestone{% endif %}" data-reveal>
-        <time class="timeline__date" datetime="{{ e.date }}">{{ e.date[8:10] }}.{{ e.date[5:7] }}</time>
+        <time class="timeline__date" datetime="{{ e.date }}">{{ (e.date|dmy)[:5] }}</time>
         <div class="timeline__body">
           <p class="timeline__meta">{% if e.manual %}{{ t('timeline_milestone') }}{% else %}{{ t('timeline_outlets', n=e.n) }}{% endif %}</p>
           <h3 class="timeline__title">

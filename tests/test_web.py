@@ -186,3 +186,31 @@ def test_status_page(client):
     assert "ABC News Albania" in r.text                 # every configured source is listed
     assert "$" not in r.text.split("<main")[1].split("</main>")[0]   # no money figures
     assert "/status" not in client.get("/sitemap.xml").text
+
+
+def test_every_page_exists_in_both_languages_with_security_headers(client):
+    for path in ("/", "/timeline", "/digest", "/about", "/sources", "/status", "/feed.xml", "/digest.xml"):
+        for prefix in ("", "/sq"):
+            url = (prefix + path) if path != "/" else (prefix + "/" if prefix else "/")
+            r = client.get(url)
+            assert r.status_code == 200, url
+            assert r.headers["Cross-Origin-Opener-Policy"] == "same-origin"
+            assert "object-src 'none'" in r.headers["Content-Security-Policy"]
+    assert client.get("/feed.xml?lang=sq").text.count("<language>sq</language>") == 1   # old feed links still work
+
+
+def test_no_js_paging(client):
+    from app import feed as feedmod
+    # the fixture has 2 stories: page 2 doesn't exist
+    assert client.get("/page/2").status_code == 404
+    assert client.get("/page/1").status_code == 404
+    with db.session() as conn:
+        for i in range(30):
+            conn.execute("INSERT INTO articles(url, title, title_norm, source, lang, published_at, fetched_at, ai_status, relevant, tags) "
+                         f"VALUES('https://ex.al/p{i}', 'Titulli {i}', 'titulli {i}', 'S', 'sq', strftime('%Y-%m-%dT%H:%M:%SZ','now','-{i + 5} minutes'), "
+                         "strftime('%Y-%m-%dT%H:%M:%SZ','now'), 'keyword_only', NULL, NULL)")
+    home = client.get("/").text
+    assert 'href="/page/2#feed"' in home                      # real link, works without JS
+    p2 = client.get("/sq/page/2")
+    assert p2.status_code == 200 and 'href="/sq/#feed"' in p2.text and "hero__title" not in p2.text
+    assert 'aria-current="page"' in client.get("/about").text

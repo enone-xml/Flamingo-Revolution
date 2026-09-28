@@ -90,9 +90,15 @@
   const menuBtn = $(".menu-btn");
   let lastFocus = null;
 
+  // While the menu is open, everything behind it is unreachable (keyboard, clicks, screen readers).
+  function setInert(on) {
+    ["main", ".footer", ".ticker", ".skip"].forEach((sel) => { const el = $(sel); if (el) el.inert = on; });
+  }
+
   function openMenu() {
     lastFocus = document.activeElement;
     menu.hidden = false;
+    setInert(true);
     document.body.classList.add("menu-open");
     doc.classList.add("menu-open");
     menuBtn.setAttribute("aria-expanded", "true");
@@ -108,6 +114,7 @@
   function closeMenu() {
     const done = () => {
       menu.hidden = true;
+      setInert(false);
       document.body.classList.remove("menu-open");
       doc.classList.remove("menu-open");
       if (lenis) lenis.start();
@@ -141,8 +148,10 @@
   if (motion && curtain) {
     gsap.fromTo(curtain, { scaleY: 1, transformOrigin: "top" }, { scaleY: 0, duration: 0.6, ease: "expo.inOut" });
     document.addEventListener("click", (e) => {
+      // Skip clicks another handler already took care of (e.g. "Load more" fetching in place).
+      if (e.defaultPrevented) return;
       const a = e.target.closest("a");
-      if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      if (!a || a.target === "_blank" || a.hasAttribute("download") || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
       const url = new URL(a.href, location.href);
       if (url.origin !== location.origin || url.pathname.startsWith("/api") || url.pathname.endsWith(".xml")) return;
       if (url.pathname === location.pathname && url.hash) return; // same-page anchor
@@ -171,10 +180,11 @@
   if (motion) {
     const words = $$("[data-split]");
     const tl = gsap.timeline({ delay: 0.35 });
+    const hero = !!$(".hero");  // not on /page/2 etc.
     words.forEach((w, i) => {
       tl.from(splitChars(w), { yPercent: 115, rotate: 6, duration: 1.05, ease: "expo.out", stagger: 0.045 }, i * 0.12);
     });
-    tl.from(".hero__kicker, .hero__tagline, .hero__coords", { y: 20, opacity: 0, duration: 0.8, ease: "power3.out", stagger: 0.08 }, 0.5)
+    if (hero) tl.from(".hero__kicker, .hero__tagline, .hero__coords", { y: 20, opacity: 0, duration: 0.8, ease: "power3.out", stagger: 0.08 }, 0.5)
       .from(".hero__stats", { y: 24, opacity: 0, duration: 0.8, ease: "power3.out" }, 0.7)
       .from(".hero__tape", { xPercent: -30, opacity: 0, duration: 1, ease: "expo.out" }, 0.8);
 
@@ -191,7 +201,7 @@
       const len = p.getTotalLength();
       gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
     });
-    tl.to(paths, { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut", stagger: 0.18 }, 0.4);
+    if (paths.length) tl.to(paths, { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut", stagger: 0.18 }, 0.4);
 
     // Parallax on scroll: title drifts up, bird drifts down.
     if ($(".hero") && window.innerWidth >= 960) {
@@ -359,7 +369,8 @@
   const ui = cards.dataset.ui;
   const form = $(".filters");
   const newBtn = $(".new-items");
-  let page = 1;
+  // On /page/N (no-JS paging) continue from that page.
+  let page = (parseInt(($(".load-more") || {}).dataset?.page, 10) || 2) - 1;
   let maxId = parseInt(cards.dataset.maxId, 10) || 0;
 
   function filterParams() {
@@ -409,6 +420,14 @@
       );
     }
     return el;
+  }
+
+  // One short, polite message for screen readers instead of re-reading every card.
+  const liveStatus = $("#feed-status");
+  function announce(text) {
+    if (!liveStatus || !text) return;
+    liveStatus.textContent = "";
+    setTimeout(() => { liveStatus.textContent = text; }, 50);
   }
 
   function markFeatured() {
@@ -481,6 +500,7 @@
       if (!append) cards.replaceChildren();
       const els = data.groups.map((g, i) => cardEl(g, !append && i === 0 && window.innerWidth >= 960));
       if (!append && !els.length) cards.append(h("p", { class: "cards__empty" }, I18N.empty));
+      announce(append ? null : (data.groups.length ? fmt(I18N.n_results, { n: cards.children.length }) : I18N.no_results));
       cards.append(...els);
       revealCards(els);
       const more = $(".load-more");
@@ -518,7 +538,8 @@
   form.addEventListener("change", () => {
     page = 1;
     const p = filterParams();
-    history.replaceState(null, "", `${location.pathname}${p.toString() ? "?" + p : ""}#feed`);
+    const home = new URL(I18N.home_url).pathname;  // filters always live on the first page
+    history.replaceState(null, "", `${home}${p.toString() ? "?" + p : ""}#feed`);
     newBtn.hidden = true;
     load();
   });

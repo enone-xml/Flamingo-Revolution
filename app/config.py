@@ -28,6 +28,8 @@ RUN_SCHEDULER = os.getenv("RUN_SCHEDULER", "1") == "1"
 # (Wikipedia); checked against reported day 80 (18 Aug), day 100 (7 Sep), day 121 (28 Sep).
 # Set PROTEST_START empty to hide the counter.
 PROTEST_START = os.getenv("PROTEST_START", "2026-05-31")
+# Pages of older stories exported for browsers without JavaScript (/page/2 ... /page/N).
+MAX_FEED_PAGES = 10
 
 # Static-site mode: when EXPORT_DIR is set, every pipeline run also writes a
 # complete static copy of the site there, for publishing to free static hosting.

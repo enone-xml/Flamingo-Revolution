@@ -52,7 +52,10 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; background: var(--bg); overflow-x: clip; }
+html {
+  -webkit-text-size-adjust: 100%; background: var(--bg); overflow-x: clip;
+  scroll-padding-top: calc(var(--topbar-h) + 1rem); /* focused/anchored items never hide under the sticky header (WCAG 2.4.11) */
+}
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 body {
@@ -387,7 +390,8 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 .card__group a:hover .card__group-title { color: var(--pink); }
 .card__group-src { color: var(--pink); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; margin-right: .4rem; }
 .card__group time { color: var(--muted); font-size: .75rem; margin-left: .3rem; white-space: nowrap; }
-.load-more { display: flex; width: max-content; margin: 2rem auto 0; }
+.pager { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin: 2rem 0 0; }
+.feed__nojs { color: var(--muted); font-size: .88rem; margin: 0 0 1rem; }
 
 /* ---------------------------------------------------------------- search, share, digest teaser */
 .search { display: block; margin: .9rem 0 .2rem; }
@@ -575,4 +579,13 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
   .hero__tape-inner { width: auto; }
   .motion [data-reveal], .motion .card.pre-reveal { opacity: 1; transform: none; }
   .hero__particles, .cursor { display: none !important; }
+}
+
+/* ---------------------------------------------------------------- Windows high contrast / forced colours */
+@media (forced-colors: active) {
+  .live-dot, .card::before, .hero__tape, .ticker, .transition, .cursor, .hero__particles { forced-color-adjust: auto; }
+  .chip input:checked + span { outline: 3px solid Highlight; outline-offset: 2px; }
+  .card, .select select, .search input, .btn, .card__share, .menu-btn, .lang-switch { border: 1px solid CanvasText; }
+  .lang-switch__on { outline: 2px solid Highlight; }
+  :focus-visible { outline: 3px solid Highlight; }
 }

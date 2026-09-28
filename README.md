@@ -88,9 +88,9 @@ a second safety net (see DEPLOY.md, step 5).
 | `app/fetcher.py` | Fetches feeds (obeys robots.txt, one request per second per host), dedupes, stores in SQLite |
 | `app/keywords.py` | Keyword prefilter in English and Albanian (diacritics ignored) |
 | `app/ai.py` | Claude Haiku step, budget guard, `spend` command |
-| `app/main.py` | Web pages, `/feed.xml`, `/api/articles`, `/health` |
+| `app/main.py` | Web pages (`@bilingual` registers each page at `/…` and `/sq/…`; `PAGES` lists them for the export and sitemap), RSS, sitemap, `/api/articles`, `/health` |
 | `app/templates`, `app/static` | Design: HTML, CSS, JS, fonts, GSAP/Lenis (self-hosted) |
-| `app/export.py` | Builds the static copy of the site (pages, JSON, RSS) |
+| `app/export.py` | Builds the static copy of the site from `PAGES` (pages, story pages, `/page/N`, JSON, RSS, `_headers`) |
 | `deploy/publish-loop.sh` | Uploads that copy to Cloudflare Pages when the news changes |
 | `DEPLOY.md` | Step-by-step server deploy, backups, monitoring, costs |
 | `STATIC-HOSTING.md` | Step-by-step free static hosting from your PC |

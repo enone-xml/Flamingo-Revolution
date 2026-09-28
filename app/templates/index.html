@@ -2,6 +2,7 @@
 {% from "_card.html" import card with context %}
 {% block title %}{{ t('seo_title_home') }}{% endblock %}
 {% block content %}
+{% if data.page == 1 %}
 <section class="hero" aria-labelledby="hero-title">
   <canvas class="hero__particles" aria-hidden="true"></canvas>
   <p class="hero__coords" aria-hidden="true">40.52°N 19.42°E <span>//</span> Nartë · Zvërnec · Sazan</p>
@@ -61,6 +62,9 @@
     </p>
   </div>
 </section>
+{% else %}
+<h1 class="sr-only">{{ t('feed_title') }} · {{ t('page_n', n=data.page) }}</h1>
+{% endif %}
 
 <section class="feed" id="feed" aria-labelledby="feed-title" tabindex="-1">
   <div class="feed__head">
@@ -115,11 +119,22 @@
   <button class="new-items" type="button" hidden></button>
   <p class="feed__ai-note">{{ t('ai_note') }}</p>
 
-  <div class="cards" aria-live="polite" aria-busy="false" data-ui="{{ lang }}" data-max-id="{{ stats.max_id }}">
+  <p class="sr-only" role="status" id="feed-status"></p>
+  {% if static %}<noscript><p class="feed__nojs">{{ t('filters_need_js') }}</p></noscript>{% endif %}
+  <div class="cards" aria-busy="false" data-ui="{{ lang }}" data-max-id="{{ stats.max_id }}">
     {% for g in data.groups %}{{ card(g) }}{% else %}<p class="cards__empty">{{ t('empty') }}</p>{% endfor %}
   </div>
-  {% if data.has_more %}
-  <a class="btn btn--ghost load-more" href="?{{ {'q': filters.q or '', 'tag': filters.tag or '', 'source': filters.source or '', 'lang': filters.lang or '', 'range': filters.range, 'page': data.page + 1}|urlencode }}#feed" data-page="{{ data.page + 1 }}">{{ t('load_more') }}</a>
+  {# JS users get "Load more" in place; without JS these are real links. The static site
+     has /page/2 ... /page/N only for the unfiltered feed. #}
+  {% set more = data.has_more and (filtered or not static or data.page < max_feed_pages) %}
+  {% if more or (data.page > 1 and not filtered) %}
+  <nav class="pager" aria-label="{{ t('pages') }}">
+    {% if data.page > 1 and not filtered %}<a class="btn btn--ghost" href="{{ url('/') if data.page == 2 else url('/page/' ~ (data.page - 1)) }}#feed">← {{ t('newer') }}</a>{% endif %}
+    {% if more %}
+    <a class="btn btn--ghost load-more" data-page="{{ data.page + 1 }}"
+       href="{% if filtered %}?{{ {'q': filters.q or '', 'tag': filters.tag or '', 'source': filters.source or '', 'lang': filters.lang or '', 'range': filters.range, 'page': data.page + 1}|urlencode }}{% else %}{{ url('/page/' ~ (data.page + 1)) }}{% endif %}#feed">{{ t('load_more') }}</a>
+    {% endif %}
+  </nav>
   {% endif %}
 </section>
 {% endblock %}

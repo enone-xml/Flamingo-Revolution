@@ -16,7 +16,7 @@
     <button class="btn btn--pink share" type="button" hidden data-share-url="{{ site_url }}{{ url('/story/' ~ story.slug) }}" data-share-title="{{ lead.title }}">{{ t('share') }}</button>
     <button class="btn btn--ghost share-img" type="button" hidden aria-label="{{ t('share_image_label') }}"
       data-title="{{ lead.title }}" data-summary="{{ lead.summary or '' }}" data-name="{{ story.slug }}"
-      data-kicker="{{ first.published_at[8:10] }}.{{ first.published_at[5:7] }}.{{ first.published_at[:4] }} · {{ t('n_sources', n=n) }}"
+      data-kicker="{{ first.published_at|dmy }} · {{ t('n_sources', n=n) }}"
       data-sources="{{ story.sources|join(' · ') }}" data-url="{{ site_url }}{{ url('/story/' ~ story.slug) }}">{{ t('share_image_label') }}</button>
     <a class="btn btn--ghost" href="{{ url('/') }}#feed">← {{ t('back_to_feed') }}</a>
   </div>

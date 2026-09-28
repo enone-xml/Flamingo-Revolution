@@ -14,49 +14,38 @@ from . import config, db, feed
 
 log = logging.getLogger("export")
 
-# URL path -> file written. "/about" is served from about.html by static hosts.
-PAGES = {
-    "/": "index.html",
-    "/sq/": "sq/index.html",
-    "/about": "about.html",
-    "/sq/about": "sq/about.html",
-    "/sources": "sources.html",
-    "/sq/sources": "sq/sources.html",
-    "/feed.xml": "feed.xml",
-    "/sq/feed.xml": "sq/feed.xml",
-    "/robots.txt": "robots.txt",
-    "/sitemap.xml": "sitemap.xml",
-    "/status": "status.html",
-    "/sq/status": "sq/status.html",
-    "/timeline": "timeline.html",
-    "/sq/timeline": "sq/timeline.html",
-    "/digest": "digest.html",
-    "/sq/digest": "sq/digest.html",
-    "/digest.xml": "digest.xml",
-    "/sq/digest.xml": "sq/digest.xml",
-}
 MAX_STORY_PAGES = 3000  # per language; keeps the site far below Cloudflare's 20,000-file limit
+FEEDS = ["/feed.xml", "/digest.xml"]      # in both languages
+FILES = ["/robots.txt", "/sitemap.xml"]   # one copy
 
-# Security and caching headers, in Cloudflare Pages' _headers format
-# (other hosts ignore this file).
-HEADERS = """/*
-  Content-Security-Policy: {csp}
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: interest-cohort=(), geolocation=(), camera=(), microphone=()
-/static/*
-  Cache-Control: public, max-age=31536000, immutable
-/data/*
-  Cache-Control: no-cache
-/feed.xml
-  Content-Type: application/rss+xml; charset=utf-8
-/sq/feed.xml
-  Content-Type: application/rss+xml; charset=utf-8
-/digest.xml
-  Content-Type: application/rss+xml; charset=utf-8
-/sq/digest.xml
-  Content-Type: application/rss+xml; charset=utf-8
-https://:project.pages.dev/*
+
+def out_file(path: str) -> str:
+    """URL path -> file name on a static host: '/' -> index.html, '/about' -> about.html,
+    '/sq/' -> sq/index.html, '/feed.xml' -> feed.xml."""
+    if path.endswith("/"):
+        return path.lstrip("/") + "index.html"
+    return path.lstrip("/") if "." in path.rsplit("/", 1)[-1] else path.lstrip("/") + ".html"
+
+
+def headers_file(main) -> str:
+    """Cloudflare Pages' _headers format (other hosts ignore it): the same security
+    headers as the live app, plus caching rules.
+
+    Note: we tried 'Cache-Control: no-transform' to stop Cloudflare injecting its
+    analytics script, but it also switches off Cloudflare's compression (HTML went
+    from ~15 KB to 79 KB), so it's not used. Our CSP blocks that script anyway."""
+    sec = "".join(f"  {k}: {v}\n" for k, v in main.SECURITY_HEADERS.items())
+    rss = "".join(f"{p}\n  Content-Type: application/rss+xml; charset=utf-8\n"
+                  for p in ("/feed.xml", "/sq/feed.xml", "/digest.xml", "/sq/digest.xml"))
+    return (
+        "/*\n" + sec
+        + "/static/*\n  Cache-Control: public, max-age=31536000, immutable\n"
+        + "/data/*\n  Cache-Control: no-cache\n"
+        + rss
+    )
+
+
+HEADERS_EXTRA = """https://:project.pages.dev/*
   X-Robots-Tag: noindex
 {www_rule}"""
 
@@ -105,11 +94,15 @@ def run(export_dir: str | None = None) -> Path:
     build.mkdir()
 
     client = TestClient(main.app)  # no "with": the scheduler doesn't start
-    for path, out in PAGES.items():
+    with db.session() as conn:
+        total = feed.query_groups(conn, "en", per_page=20)["total_groups"]
+    feed_pages = [f"/page/{n}" for n in range(2, min(config.MAX_FEED_PAGES, -(-total // 20)) + 1)]
+    paths = [main.lang_url(lang, p) for p in [*main.PAGES, *feed_pages, *FEEDS] for lang in ("en", "sq")]
+    for path in paths + FILES:
         # The header tells the templates to render the static-site variant.
         resp = client.get(path, headers={"X-Static-Export": "1"})
         resp.raise_for_status()
-        target = build / out
+        target = build / out_file(path)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(resp.content)
 
@@ -135,7 +128,7 @@ def run(export_dir: str | None = None) -> Path:
     # Only the main domain should appear in search results, not www or *.pages.dev.
     host = config.SITE_URL.split("://", 1)[-1]
     www_rule = "" if host.startswith(("localhost", "www.")) else f"https://www.{host}/*\n  X-Robots-Tag: noindex\n"
-    (build / "_headers").write_text(HEADERS.format(csp=main.CSP, www_rule=www_rule))
+    (build / "_headers").write_text(headers_file(main) + HEADERS_EXTRA.format(www_rule=www_rule))
 
     data_dir = build / "data"
     data_dir.mkdir()
