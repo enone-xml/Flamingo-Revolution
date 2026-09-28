@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ t('about_title') }} · {{ t('site_name') }}{% endblock %}
+{% block content %}
+<article class="page">
+  <h1 class="page__title" data-split>{{ t('about_title') }}</h1>
+  <div class="page__body">
+  {% if lang == 'sq' %}
+    <h2 data-reveal>Çfarë është kjo faqe</h2>
+    <p data-reveal>Flamingo Watch mbledh në një vend lajmet për protestat e “Revolucionit të Flamingove” në Shqipëri dhe për qeverinë e Edi Ramës, nga media shqiptare dhe ndërkombëtare. Përfshijmë media me qëndrime të ndryshme dhe nuk i etiketojmë.</p>
+    <h2 data-reveal>Si funksionon</h2>
+    <ul data-reveal>
+      <li>Çdo {{ interval }} minuta, një program lexon RSS-të e {{ n_sources }} medieve dhe kërkimet për fjalë kyçe. Gjithçka është automatike, pa redaktor njerëzor.</li>
+      <li>Një filtër fjalësh kyçe (shqip dhe anglisht) zgjedh artikujt që mund të lidhen me temën.</li>
+      <li>Për çdo artikull të ri, AI (Claude Haiku nga Anthropic) lexon vetëm titullin dhe hyrjen e shkurtër të mediës, dhe shkruan një titull dhe përmbledhje prej 1–2 fjalish në anglisht dhe shqip, plus etiketat e temës. Artikujt për të njëjtën ngjarje grupohen në një kartë.</li>
+      <li>Ruajmë vetëm titullin, emrin e mediës, orën, lidhjen dhe përmbledhjen tonë. Asnjëherë tekstin e plotë. Për ta lexuar, klikoni lidhjen te media origjinale.</li>
+    </ul>
+    <h2 data-reveal>Çfarë nuk bëjmë</h2>
+    <ul data-reveal>
+      <li><strong>Nuk verifikojmë faktet.</strong> Përmbledhjet vetëm rishkruajnë atë që thotë media. Nëse një titull përmban një pretendim, ai mbetet pretendim i mediës ose i personit që e tha.</li>
+      <li>AI mund të gabojë në përkthim ose përmbledhje. Kontrolloni gjithmonë artikullin origjinal.</li>
+      <li>Nuk kemi llogari, cookies gjurmuese apo analitikë. Nuk mbledhim të dhëna personale.</li>
+    </ul>
+    <h2 data-reveal>Raportoni një problem</h2>
+    <p data-reveal>Keni gjetur një përkthim të gabuar, një lajm jashtë teme ose një media që mungon? Hapni një <a href="https://github.com/enone-xml/Flamingo-Revolution/issues" rel="noopener">issue në GitHub</a>.</p>
+    <p data-reveal><a class="btn btn--pink" href="{{ url('/sources') }}">{{ t('nav_sources') }} →</a></p>
+  {% else %}
+    <h2 data-reveal>What this site is</h2>
+    <p data-reveal>Flamingo Watch collects news about the “Flamingo Revolution” protests in Albania and about Edi Rama's government in one place, from Albanian and international media. We include outlets with a wide range of viewpoints and do not label them.</p>
+    <h2 data-reveal>How it works</h2>
+    <ul data-reveal>
+      <li>Every {{ interval }} minutes, a program reads the RSS feeds of {{ n_sources }} outlets plus keyword searches. It's fully automated, with no human editor.</li>
+      <li>A keyword filter (Albanian and English) picks articles that may be on topic.</li>
+      <li>For each new article, an AI (Anthropic's Claude Haiku) reads only the outlet's headline and short teaser, and writes a 1–2 sentence title and summary in English and Albanian, plus topic tags. Articles about the same event are grouped into one card.</li>
+      <li>We store only the headline, outlet name, time, link and our own summary. Never the full text. To read an article, follow the link to the original outlet.</li>
+    </ul>
+    <h2 data-reveal>What we don't do</h2>
+    <ul data-reveal>
+      <li><strong>We don't fact-check.</strong> Summaries only restate what the outlet published. If a headline contains a claim, it remains the claim of that outlet or the person quoted.</li>
+      <li>The AI can make mistakes in translation or summary. Always check the original article.</li>
+      <li>No accounts, no tracking cookies, no analytics. We don't collect personal data.</li>
+    </ul>
+    <h2 data-reveal>Report a problem</h2>
+    <p data-reveal>Found a bad translation, an off-topic item or a missing outlet? Open an <a href="https://github.com/enone-xml/Flamingo-Revolution/issues" rel="noopener">issue on GitHub</a>.</p>
+    <p data-reveal><a class="btn btn--pink" href="{{ url('/sources') }}">{{ t('nav_sources') }} →</a></p>
+  {% endif %}
+  </div>
+</article>
+{% endblock %}

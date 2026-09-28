@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ t('sources_title') }} · {{ t('site_name') }}{% endblock %}
+{% block content %}
+<article class="page">
+  <h1 class="page__title" data-split>{{ t('sources_title') }}</h1>
+  <div class="page__body">
+    <p data-reveal>{{ t('sources_intro') }}</p>
+    <ul class="source-list">
+      {% for s in rows %}
+      <li data-reveal>
+        <a href="{{ s.home }}" rel="noopener" target="_blank">{{ s.name }}</a>
+        <span class="source-list__lang">{{ s.lang|upper }}</span>
+        {% if s.checked %}<span class="source-list__status {{ 'is-ok' if s.ok else 'is-err' }}">{{ t('source_status_ok') if s.ok else t('source_status_err') }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</article>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% from "_card.html" import card with context %}
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <canvas class="hero__particles" aria-hidden="true"></canvas>
+  <p class="hero__coords" aria-hidden="true">40.52°N 19.42°E <span>//</span> Nartë · Zvërnec · Sazan</p>
+  <h1 class="hero__title" id="hero-title">
+    <span class="hero__line"><span class="hero__word" data-split>{{ t('hero_line1') }}</span></span>
+    <span class="hero__line hero__line--pink"><span class="hero__word" data-split>{{ t('hero_line2') }}</span></span>
+  </h1>
+  <p class="hero__kicker"><span class="live-dot" aria-hidden="true"></span>{{ t('hero_kicker') }}</p>
+  <p class="hero__tagline">{{ t('tagline') }}</p>
+
+  <dl class="hero__stats">
+    <div><dt>{{ t('articles_today') }}</dt><dd data-count="{{ stats.articles_today }}" id="stat-today">{{ stats.articles_today }}</dd></div>
+    <div><dt>{{ t('sources_count') }}</dt><dd data-count="{{ stats.sources }}">{{ stats.sources }}</dd></div>
+    <div class="hero__stats-wide"><dt>{{ t('updated') }}</dt><dd class="hero__updated" data-updated="{{ stats.last_updated or '' }}">{{ ago(stats.last_updated) }}</dd></div>
+  </dl>
+
+  <img class="hero__bird" src="/static/img/flamingo.svg" alt="" width="360" height="600" aria-hidden="true">
+  <svg class="hero__bird-draw" viewBox="0 0 120 200" aria-hidden="true" focusable="false">
+    <g fill="none" stroke="#FF3EA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M40 92C30 70 62 58 84 70c16 8 20 26 2 34-16 8-38 4-46-12z"/>
+      <path d="M44 86C30 70 30 52 44 42c14-10 16-22 6-30-6-5-14-2-14 6"/>
+      <path d="M36 12c-6 2-9 8-8 14 1 3 3 5 5 6"/>
+      <path d="M66 106v84m0 0-8 4m8-4 8 4"/>
+      <path d="m72 106 4 34-14-12"/>
+    </g>
+    <path d="M92 196c2-24 6-42 14-56" fill="none" stroke="#27F58A" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+
+  <a class="hero__tape" href="#feed">
+    <span class="hero__tape-inner">{% for i in range(6) %}<span>{{ t('scroll_cue') }} ↓</span>{% endfor %}</span>
+  </a>
+</section>
+
+<section class="intro" aria-labelledby="intro-title">
+  <h2 class="intro__title" id="intro-title" data-reveal>{{ t('intro_title') }}</h2>
+  <div class="intro__body">
+    {% if lang == 'sq' %}
+    <p data-reveal>“Revolucioni i Flamingove” është emri që protestuesit u kanë vënë protestave që nisën në maj 2026 në Zvërnec, pranë Lagunës së Nartës në jug të Shqipërisë, kundër një resorti luksoz të planifikuar në bregdet dhe në ishullin e Sazanit. Projekti mbështetet nga investitori amerikan Jared Kushner.</p>
+    <p data-reveal>Flamingoja rozë, që dimëron në lagunë, u bë simboli i lëvizjes. Qeveria e Kryeministrit Edi Rama thotë se projekti sjell investime; kundërshtarët thonë se kërcënon një zonë të mbrojtur. Që atëherë protestat janë zgjeruar në kritika më të gjera ndaj qeverisë.</p>
+    {% else %}
+    <p data-reveal>“Flamingo Revolution” is the name protesters gave to demonstrations that began in May 2026 at Zvërnec, near the Narta Lagoon in southern Albania, against a planned luxury resort on the coast and on Sazan Island. The project is backed by US investor Jared Kushner.</p>
+    <p data-reveal>The pink flamingo, which winters in the lagoon, became the movement's symbol. Prime Minister Edi Rama's government says the project will bring investment; opponents say it threatens a protected area. The protests have since grown into wider criticism of the government.</p>
+    {% endif %}
+    <p class="intro__more" data-reveal>{{ t('intro_sources') }}:
+      <a href="https://en.wikipedia.org/wiki/Flamingo_Revolution" rel="noopener" target="_blank">Wikipedia</a>,
+      <a href="https://www.theguardian.com/world/albania" rel="noopener" target="_blank">The Guardian</a>,
+      <a href="https://www.reporter.al/" rel="noopener" target="_blank">Reporter.al</a>,
+      <a href="https://neweasterneurope.eu/2026/07/07/making-sense-of-the-flamingo-revolution-in-albania/" rel="noopener" target="_blank">New Eastern Europe</a>
+    </p>
+  </div>
+</section>
+
+<section class="feed" id="feed" aria-labelledby="feed-title" tabindex="-1">
+  <div class="feed__head">
+    <h2 class="feed__title" id="feed-title"><span class="live-dot" aria-hidden="true"></span>{{ t('feed_title') }}</h2>
+    <p class="feed__updated">{{ t('updated') }} <span class="js-updated" data-updated="{{ stats.last_updated or '' }}">{{ ago(stats.last_updated) }}</span></p>
+  </div>
+
+  <form class="filters" method="get" action="{{ url('/') }}#feed" aria-label="Filters">
+    <fieldset class="filters__tags">
+      <legend>{{ t('filter_tag') }}</legend>
+      <label class="chip"><input type="radio" name="tag" value="" {% if not filters.tag %}checked{% endif %}><span>{{ t('all') }}</span></label>
+      {% for tag in tags %}
+      <label class="chip chip--{{ tag|lower }}"><input type="radio" name="tag" value="{{ tag }}" {% if filters.tag == tag %}checked{% endif %}><span>{{ tag_label(tag) }}</span></label>
+      {% endfor %}
+    </fieldset>
+    <div class="filters__row">
+      <label class="select"><span>{{ t('filter_source') }}</span>
+        <select name="source">
+          <option value="">{{ t('all') }}</option>
+          {% for s in sources %}<option value="{{ s }}" {% if filters.source == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="select"><span>{{ t('filter_lang') }}</span>
+        <select name="lang">
+          <option value="">{{ t('all') }}</option>
+          <option value="sq" {% if filters.lang == 'sq' %}selected{% endif %}>{{ t('lang_sq') }}</option>
+          <option value="en" {% if filters.lang == 'en' %}selected{% endif %}>{{ t('lang_en') }}</option>
+        </select>
+      </label>
+      <label class="select"><span>{{ t('filter_range') }}</span>
+        <select name="range">
+          {% for r in ['24h', '7d', '30d'] %}<option value="{{ r }}" {% if filters.range == r %}selected{% endif %}>{{ t('range_' + r) }}</option>{% endfor %}
+          <option value="all" {% if filters.range == 'all' %}selected{% endif %}>{{ t('all') }}</option>
+        </select>
+      </label>
+      <div class="filters__buttons">
+        <button type="submit" class="btn btn--pink js-hide">{{ t('apply') }}</button>
+        <a class="btn btn--ghost" href="{{ url('/') }}#feed">{{ t('reset') }}</a>
+      </div>
+    </div>
+  </form>
+
+  <button class="new-items" type="button" hidden></button>
+  <p class="feed__ai-note">{{ t('ai_note') }}</p>
+
+  <div class="cards" aria-live="polite" aria-busy="false" data-ui="{{ lang }}" data-max-id="{{ stats.max_id }}">
+    {% for g in data.groups %}{{ card(g) }}{% else %}<p class="cards__empty">{{ t('empty') }}</p>{% endfor %}
+  </div>
+  {% if data.has_more %}
+  <a class="btn btn--ghost load-more" href="?{{ {'tag': filters.tag or '', 'source': filters.source or '', 'lang': filters.lang or '', 'range': filters.range, 'page': data.page + 1}|urlencode }}#feed" data-page="{{ data.page + 1 }}">{{ t('load_more') }}</a>
+  {% endif %}
+</section>
+{% endblock %}

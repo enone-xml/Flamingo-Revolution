@@ -20,3 +20,4 @@ USER_AGENT = f"FlamingoWatchBot/1.0 (+{SITE_URL}/about)"
 AI_PRICE_INPUT_PER_M = float(os.getenv("AI_PRICE_INPUT_PER_M", "1.0"))
 AI_PRICE_OUTPUT_PER_M = float(os.getenv("AI_PRICE_OUTPUT_PER_M", "5.0"))
 AI_MAX_PER_RUN = int(os.getenv("AI_MAX_PER_RUN", "40"))
+RUN_SCHEDULER = os.getenv("RUN_SCHEDULER", "1") == "1"

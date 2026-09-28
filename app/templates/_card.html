@@ -1,0 +1,27 @@
+{% macro card(g) -%}
+{% set a = g.lead %}
+<article class="card{% if not a.ai %} card--plain{% endif %}" data-max-id="{{ g.max_id }}">
+  <div class="card__meta">
+    <span class="card__source">{{ a.source }}</span>
+    <time datetime="{{ a.published_at }}" data-ago>{{ ago(a.published_at) }}</time>
+    {% if g.articles|length > 1 %}<span class="card__count">{{ t('n_sources', n=g.sources|length) }}</span>{% endif %}
+  </div>
+  <h3 class="card__title"><a href="{{ a.url }}" rel="noopener" target="_blank" hreflang="{{ a.lang }}">{{ a.title }}</a></h3>
+  {% if a.summary %}<p class="card__summary">{{ a.summary }}</p>{% else %}<p class="card__note">{{ t('no_summary') }}</p>{% endif %}
+  {% if a.ai and a.original_title != a.title %}<p class="card__orig" lang="{{ a.lang }}"><span>{{ t('original_headline') }}:</span> {{ a.original_title }}</p>{% endif %}
+  <div class="card__foot">
+    {% if g.tags %}<ul class="card__tags">{% for tag in g.tags %}<li class="tag tag--{{ tag|lower }}">{{ tag_label(tag) }}</li>{% endfor %}</ul>{% endif %}
+    <a class="card__read" href="{{ a.url }}" rel="noopener" target="_blank">{{ t('read_original', source=a.source) }} <span aria-hidden="true">↗</span></a>
+  </div>
+  {% if g.articles|length > 1 %}
+  <button class="card__toggle" type="button" aria-expanded="false" aria-controls="grp-{{ g.max_id }}">
+    <span>{{ t('show_sources') }}</span> <span class="card__toggle-n">({{ g.articles|length }})</span>
+  </button>
+  <ul class="card__group" id="grp-{{ g.max_id }}" hidden>
+    {% for o in g.articles %}
+    <li><a href="{{ o.url }}" rel="noopener" target="_blank"><span class="card__group-src">{{ o.source }}</span> <span class="card__group-title" lang="{{ o.lang }}">{{ o.original_title }}</span> <time datetime="{{ o.published_at }}" data-ago>{{ ago(o.published_at) }}</time></a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</article>
+{%- endmacro %}
