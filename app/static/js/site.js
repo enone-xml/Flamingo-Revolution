@@ -144,10 +144,15 @@
 
   // ------------------------------------------------------------ hero + reveals
   function splitChars(el) {
-    const text = el.textContent;
+    // Letters animate one by one, but each word stays together so long titles
+    // (e.g. "Përmbledhja ditore") can wrap onto the next line on phones.
+    const text = el.textContent.trim();
     el.textContent = "";
     el.append(h("span", { class: "sr-only" }, text));
-    [...text].forEach((ch) => el.append(h("span", { class: "ch", "aria-hidden": "true" }, ch === " " ? " " : ch)));
+    text.split(/\s+/).forEach((word, i) => {
+      if (i) el.append(document.createTextNode(" "));
+      el.append(h("span", { class: "word", "aria-hidden": "true" }, [...word].map((ch) => h("span", { class: "ch" }, ch))));
+    });
     return $$(".ch", el);
   }
 

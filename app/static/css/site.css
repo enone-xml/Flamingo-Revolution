@@ -231,6 +231,8 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 .hero__line--pink { color: var(--pink); padding-left: .45em; }
 .hero__word { display: inline-block; }
 .hero__word .ch { display: inline-block; will-change: transform; }
+.word { display: inline-block; white-space: nowrap; }
+.word .ch { display: inline-block; }
 .hero__kicker {
   margin: 1.25rem 0 .25rem; color: var(--text);
   font: 600 .8rem/1.4 var(--body); letter-spacing: .14em; text-transform: uppercase;
@@ -451,7 +453,11 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 
 /* ---------------------------------------------------------------- inner pages */
 .page { padding: 3rem var(--gutter) 5rem; max-width: 1100px; }
-.page__title { font: 400 clamp(3rem, 14vw, 9rem)/.9 var(--display); text-transform: uppercase; color: var(--pink); margin-bottom: 2rem; overflow: hidden; }
+.page__title {
+  font: 400 clamp(2.6rem, 12vw, 9rem)/.95 var(--display); text-transform: uppercase; color: var(--pink);
+  margin-bottom: 2rem; overflow: hidden; overflow-wrap: anywhere;
+  padding-top: .12em; /* room for accents like Ë, which the tight line height would clip */
+}
 .page__body { max-width: 68ch; }
 .page__body h2 { font: 400 1.9rem/1.1 var(--display); text-transform: uppercase; margin: 2.2rem 0 .7rem; }
 .page__body ul { padding-left: 1.2rem; }
