@@ -237,7 +237,7 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 }
 .intro__title { font: 400 clamp(2.2rem, 9vw, 5.5rem)/.95 var(--display); text-transform: uppercase; }
 .intro__body p { margin: 0 0 1.1rem; font-size: 1.08rem; max-width: 62ch; }
-.intro__body p:first-child::first-letter { color: var(--pink); }
+.intro__name { color: var(--pink); font-weight: 600; }
 .intro__more { color: var(--muted); font-size: .95rem !important; }
 
 /* ---------------------------------------------------------------- feed */
