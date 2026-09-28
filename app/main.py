@@ -237,7 +237,14 @@ def robots():
 
 @app.get("/health")
 def health():
+    """200 when the site is up and the fetcher ran recently; 503 otherwise,
+    so an uptime monitor also notices a stuck scheduler."""
     with db.session() as conn:
         last = db.get_meta(conn, "last_fetch_at")
         count = conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
-    return {"ok": True, "last_fetch_at": last, "articles": count}
+    stale = False
+    if last:
+        age = datetime.now(timezone.utc) - datetime.strptime(last, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        stale = age.total_seconds() > max(45, 3 * config.FETCH_INTERVAL_MINUTES) * 60
+    body = {"ok": not stale, "last_fetch_at": last, "articles": count}
+    return JSONResponse(body, status_code=503 if stale else 200)

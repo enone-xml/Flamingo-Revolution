@@ -59,3 +59,14 @@ def test_rss_is_valid_xml(client):
     assert r.headers["content-type"].startswith("application/rss+xml")
     root = ET.fromstring(r.content)
     assert len(root.findall("./channel/item")) == 3
+
+
+def test_health_flags_stale_fetcher(client):
+    from app import db as dbm
+    with dbm.session() as conn:
+        dbm.set_meta(conn, "last_fetch_at", "2020-01-01T00:00:00Z")
+    assert client.get("/health").status_code == 503
+    with dbm.session() as conn:
+        from datetime import datetime, timezone
+        dbm.set_meta(conn, "last_fetch_at", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+    assert client.get("/health").status_code == 200
