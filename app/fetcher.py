@@ -197,6 +197,22 @@ def store_entries(conn, entries, source_name: str, lang: str, country: str,
     return new, skipped
 
 
+def is_due(conn, src: dict) -> bool:
+    """True if this source's own interval ("every: N" minutes) has passed."""
+    every = int(src.get("every") or 0)
+    if every <= 0:
+        return True
+    row = conn.execute(
+        "SELECT MAX(COALESCE(last_ok_at, ''), COALESCE(last_error_at, '')) FROM feed_status WHERE source = ?",
+        (src["name"],),
+    ).fetchone()
+    if not row or not row[0]:
+        return True
+    last = datetime.strptime(row[0], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    # a minute of slack so a 30-minute feed doesn't slip to 40 because of run timing
+    return datetime.now(timezone.utc) - last >= timedelta(minutes=every - 1)
+
+
 def fetch_feed(conn, client: PoliteClient, src: dict) -> int:
     name, url = src["name"], src["url"]
     if not client.allowed(url):
@@ -268,6 +284,8 @@ def run_once(db_path: str | None = None, sources_path: str | None = None) -> int
     try:
         with db.session(db_path) as conn:
             for src in sources:
+                if not is_due(conn, src):
+                    continue
                 try:
                     total += fetch_feed(conn, client, src)
                 except Exception as exc:  # keep going whatever happens
@@ -275,6 +293,8 @@ def run_once(db_path: str | None = None, sources_path: str | None = None) -> int
                     _record_error(conn, src.get("name", "?"), src.get("url", ""), repr(exc))
                 conn.commit()
             # GDELT rate-limits hard, so each run makes one search, taking turns.
+            if searches and (db.get_meta(conn, "gdelt_skip_until") or "") > iso(datetime.now(timezone.utc)):
+                searches = []  # GDELT refused recently: give it a rest
             if searches:
                 turn = int(db.get_meta(conn, "gdelt_turn", "0") or 0)
                 db.set_meta(conn, "gdelt_turn", str(turn + 1))
@@ -283,6 +303,7 @@ def run_once(db_path: str | None = None, sources_path: str | None = None) -> int
                 try:
                     total += fetch_search(conn, client, search)
                 except RateLimited:
+                    db.set_meta(conn, "gdelt_skip_until", iso(datetime.now(timezone.utc) + timedelta(hours=1)))
                     conn.commit()
                     break  # back off until the next run
                 except Exception as exc:

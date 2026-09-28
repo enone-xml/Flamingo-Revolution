@@ -87,3 +87,14 @@ def test_etag_kept_after_not_modified(tmp_path):
     fetcher._record_ok(conn, "S", "u", SimpleNamespace(headers={}), 0)  # 304 without headers
     row = conn.execute("SELECT etag, modified FROM feed_status").fetchone()
     assert (row["etag"], row["modified"]) == ("abc", "x")
+
+
+def test_every_minutes_skips_until_due(tmp_path):
+    conn = db.connect(str(tmp_path / "d.db"))
+    src = {"name": "Big", "url": "u", "every": 30}
+    assert fetcher.is_due(conn, src)            # never fetched
+    conn.execute("INSERT INTO feed_status(source, last_ok_at) VALUES('Big', strftime('%Y-%m-%dT%H:%M:%SZ','now','-10 minutes'))")
+    assert not fetcher.is_due(conn, src)        # fetched 10 min ago
+    conn.execute("UPDATE feed_status SET last_ok_at = strftime('%Y-%m-%dT%H:%M:%SZ','now','-31 minutes')")
+    assert fetcher.is_due(conn, src)
+    assert fetcher.is_due(conn, {"name": "Big", "url": "u"})  # no interval: always
