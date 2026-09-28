@@ -16,6 +16,9 @@ again before you buy.
 | **DigitalOcean Basic Droplet** (recommended) | 1 vCPU, 1 GiB RAM, 25 GiB SSD, 1,000 GiB traffic | **$6.00** | A $4 plan (512 MiB) also exists but is tight for Docker + Python. Weekly backups add 20% ($1.20). Frankfurt (FRA1) is closest to Albania. |
 | Hetzner Cloud | CX23: 2 vCPU, 4 GB, 40 GB | €5.99 | Listed as **"not available"** on 2026-09-28. The next plan you can actually order (CPX12) costs €11.99, which breaks the budget. |
 | Hostinger VPS KVM 1 | 1 vCPU, 4 GB RAM, 50 GB NVMe, 4 TB traffic, free weekly backups, **free .com for 1 year** | $6.49 (24-month term, $155.76 upfront) | Renews at $11.99/mo. A 12-month term is $6.99/mo ($83.88), renewing at $12.99. Monthly billing is $9.99, renewing at $19.49. |
+| **Akamai Cloud (Linode) Nanode 1 GB** (cheapest pay-monthly) | 1 vCPU, 1 GB RAM, 25 GB, 1 TB traffic | **$5.00** | Billed by the hour up to $5 a month, with no commitment. Frankfurt, Amsterdam, Milan and others in Europe. |
+| Vultr Cloud Compute | Shared CPU | from $5.00 | Pay monthly or hourly, no commitment. Their site lists "starting at just $5/month". |
+| OVHcloud VPS-1 | 2 vCores, 4 GB, 40 GB NVMe, daily backup | $4.54 with a 12-month commitment ($54.48 upfront) | Without commitment it's about 15% more, roughly $5.35 a month (my estimate from their stated 15% discount). |
 | Render | Web service, 512 MB RAM, <1 CPU, plus 1 GB disk for SQLite | $7.00 + $0.25 | The free tier sleeps when idle and has no persistent disk, so the fetcher can't run. It's also more expensive than a VPS. |
 
 **Recommendation: a DigitalOcean $6 Droplet in Frankfurt.** It fits the ≤ $7
@@ -35,6 +38,22 @@ DigitalOcean-specific except step 1.1.
 3. Networking → Firewalls → create a firewall that allows inbound
    **TCP 22, 80, 443** and **UDP 443**, and apply it to the droplet.
 4. Note the droplet's **public IPv4** (and IPv6 if you enabled it).
+
+### 1.1a Paying month to month (no yearly commitment)
+
+If you'd rather not pay a year upfront, the cheapest option is **Akamai Cloud (Linode) Nanode 1 GB at
+$5/month**. It's billed by the hour and capped at $5 a month, and you can delete it any time.
+
+1. Sign up at **cloud.linode.com** and add your SSH key (Profile → SSH Keys).
+2. **Create → Linode**, image **Ubuntu 24.04 LTS**, region **Frankfurt, DE**,
+   plan **Shared CPU → Nanode 1 GB**, add your SSH key, set a root password.
+3. **Create → Cloud Firewall** with inbound **TCP 22, 80, 443** and **UDP 443**, and
+   attach it to the Linode.
+4. Note the IPv4 address.
+
+Buy the domain separately at **Cloudflare Registrar** (step 2). Every registrar charges
+for domains by the year, so that's a one-off $10.46 a year.
+DigitalOcean at $6/month (step 1.1) is the same kind of month-to-month deal.
 
 ### 1.1b Or: buy the server and domain at Hostinger
 
@@ -343,6 +362,9 @@ the update command.
 | **Total (worst case)** | **≤ $12.07** |
 
 That's under the $20 limit even in the worst case, with about $8 to spare.
+
+**If you pay month to month on Akamai/Linode:** $5.00 server + $0.87 domain + at most $4.00 AI
+= **at most $9.87 a month**, paid monthly, with the domain paid yearly.
 
 **If you buy at Hostinger instead:**
 
