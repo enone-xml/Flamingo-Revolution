@@ -8,6 +8,8 @@ bilingual (EN/SQ) titles and summaries, and shows everything in one feed.
 It doesn't fact-check or label outlets. It stores only the headline, source,
 time, link and its own short summary.
 
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Two ways to host it
 
 - **Run on your PC and publish for free** (no server needed): see [STATIC-HOSTING.md](STATIC-HOSTING.md).

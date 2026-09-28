@@ -8,7 +8,7 @@ import json
 import logging
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from . import config, db
 
@@ -45,6 +45,9 @@ Return JSON with:
 - tags: 1-3 tags from the allowed list.
 - story_key: a short lowercase slug (3-6 words, hyphens) naming the specific event, e.g. "tirana-protest-2026-09-27" or "shish-chief-hyseni-case". Reuse one of the recent keys below if this item is about the same event.
 If relevant is false, still fill every field briefly."""
+
+
+PAUSE_AFTER_ACCOUNT_ERROR = timedelta(hours=1)
 
 
 def month_now() -> str:
@@ -105,6 +108,11 @@ def clean_result(data: dict) -> dict:
 
 # ---------------------------------------------------------------- backends
 
+class AccountError(Exception):
+    """The API refused because of the account (no credit, bad key, unknown model).
+    Retrying won't help, so the pipeline pauses AI and shows original headlines."""
+
+
 class RealBackend:
     def __init__(self):
         import anthropic
@@ -114,6 +122,17 @@ class RealBackend:
         self.client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, max_retries=4, timeout=60)
 
     def call(self, prompt: str) -> tuple[dict, int, int]:
+        try:
+            return self._call(prompt)
+        except (self.anthropic.AuthenticationError, self.anthropic.PermissionDeniedError,
+                self.anthropic.NotFoundError) as exc:
+            raise AccountError(f"{type(exc).__name__}: {exc}") from exc
+        except self.anthropic.BadRequestError as exc:
+            if any(w in str(exc).lower() for w in ("credit balance", "billing", "spend limit", "usage limit")):
+                raise AccountError(f"out of credit: {exc}") from exc
+            raise
+
+    def _call(self, prompt: str) -> tuple[dict, int, int]:
         resp = self.client.messages.create(
             model=config.AI_MODEL,
             max_tokens=800,
@@ -170,6 +189,10 @@ def process_pending(db_path: str | None = None, backend=None, limit: int | None 
         if backend is None:
             stats["keyword_only"] = _mark_keyword_only(conn, "no API key or AI_MODE=off")
             return stats
+        paused_until = db.get_meta(conn, "ai_paused_until")
+        if paused_until and paused_until > datetime.now(timezone.utc).isoformat():
+            stats["keyword_only"] = _mark_keyword_only(conn, f"AI paused until {paused_until[:16]}Z")
+            return stats
         rows = conn.execute(
             "SELECT * FROM articles WHERE ai_status = 'pending' ORDER BY published_at DESC LIMIT ?",
             (limit,),
@@ -183,6 +206,14 @@ def process_pending(db_path: str | None = None, backend=None, limit: int | None 
                 break
             try:
                 data, tin, tout = backend.call(build_prompt(art, recent_story_keys(conn)))
+            except AccountError as exc:
+                # e.g. credit ran out: stop calling, show headlines, try again in an hour.
+                until = (datetime.now(timezone.utc) + PAUSE_AFTER_ACCOUNT_ERROR).isoformat()
+                db.set_meta(conn, "ai_paused_until", until)
+                db.set_meta(conn, "ai_pause_reason", str(exc)[:300])
+                log.error("AI paused for 1 hour: %s", exc)
+                stats["keyword_only"] += _mark_keyword_only(conn, "AI account error")
+                break
             except Exception as exc:
                 attempts = art["ai_attempts"] + 1
                 status = "failed" if attempts >= 3 else "pending"
@@ -224,6 +255,9 @@ def spend_report(db_path: str | None = None) -> str:
         calls = conn.execute("SELECT COUNT(*) FROM ai_usage WHERE month = ?", (month,)).fetchone()[0]
         pending = conn.execute("SELECT COUNT(*) FROM articles WHERE ai_status = 'pending'").fetchone()[0]
         hit = db.get_meta(conn, "ai_budget_hit") == month
+        paused = db.get_meta(conn, "ai_paused_until")
+        reason = db.get_meta(conn, "ai_pause_reason") or ""
+        paused_now = bool(paused and paused > datetime.now(timezone.utc).isoformat())
     mode = config.AI_MODE if (config.AI_MODE != "real" or config.ANTHROPIC_API_KEY) else "off (no API key)"
     return (
         f"Month:          {month}\n"
@@ -231,6 +265,7 @@ def spend_report(db_path: str | None = None) -> str:
         f"AI calls:       {calls}\n"
         f"Estimated cost: ${spent:.4f} of ${config.AI_MONTHLY_BUDGET_USD:.2f} budget\n"
         f"Budget reached: {'YES - keyword-only mode until next month' if hit else 'no'}\n"
+        f"AI paused:      {('YES until ' + paused[:16] + 'Z - ' + reason[:120]) if paused_now else 'no'}\n"
         f"Waiting for AI: {pending} articles"
     )
 

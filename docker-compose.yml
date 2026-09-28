@@ -30,6 +30,26 @@ services:
       driver: json-file
       options: {max-size: "5m", max-file: "2"}
 
+  # Pulls merged pull requests from GitHub (only after their tests pass) and
+  # rebuilds the site. Only starts when COMPOSE_PROFILES includes "autoupdate".
+  updater:
+    image: docker:cli
+    profiles: ["autoupdate"]
+    entrypoint: ["/bin/sh", "/repo/deploy/update-loop.sh"]
+    user: "1000:1000"
+    group_add: ["${DOCKER_GID:-1001}"]   # lets the updater use Docker
+    environment:
+      HOME: /tmp
+      GIT_TERMINAL_PROMPT: "0"
+    env_file: .env
+    volumes:
+      - .:/repo
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "2"}
+
 volumes:
   flamingo-data:
   site-export:

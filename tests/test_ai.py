@@ -65,3 +65,59 @@ def test_clean_result_filters_bad_tags_and_slugifies():
     res = ai.clean_result({"relevant": True, "tags": ["protests", "made-up"], "story_key": "Zvërnec Resort Protest!"})
     assert json.loads(res["tags"]) == ["protests"]
     assert res["story_key"] == "zvernec-resort-protest"
+
+
+def test_out_of_credit_shows_headlines_and_pauses(tmp_path, monkeypatch):
+    import anthropic
+    import httpx
+
+    path = str(tmp_path / "t.db")
+    add_articles(path, 5)
+    calls = []
+
+    def no_credit(self, prompt):
+        calls.append(1)
+        resp = httpx.Response(400, request=httpx.Request("POST", "https://api.anthropic.com/v1/messages"))
+        raise anthropic.BadRequestError(
+            "Your credit balance is too low to access the Anthropic API.", response=resp, body=None)
+
+    monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr(ai.RealBackend, "_call", no_credit)
+    stats = ai.process_pending(path, backend=ai.RealBackend())
+    assert len(calls) == 1                      # stopped after the first refusal
+    assert stats["keyword_only"] == 5           # every article is shown right away
+    with db.session(path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM articles WHERE ai_status='keyword_only'").fetchone()[0] == 5
+    assert "AI paused:      YES" in ai.spend_report(path)
+
+    # While paused, new articles skip the API entirely.
+    with db.session(path) as conn:
+        conn.execute("INSERT INTO articles(url, title, title_norm, source, lang, published_at, fetched_at) "
+                     "VALUES('https://x.al/new', 'Protesta e re', 'protesta e re', 'T', 'sq', '2026-09-28T11:00:00Z', '2026-09-28T11:00:00Z')")
+    ai.process_pending(path, backend=ai.RealBackend())
+    assert len(calls) == 1
+
+    # After the pause, it tries again (e.g. once credit is topped up).
+    with db.session(path) as conn:
+        db.set_meta(conn, "ai_paused_until", "2000-01-01T00:00:00+00:00")
+        conn.execute("INSERT INTO articles(url, title, title_norm, source, lang, published_at, fetched_at) "
+                     "VALUES('https://x.al/new2', 'Protesta tjeter', 'protesta tjeter', 'T', 'sq', '2026-09-28T11:05:00Z', '2026-09-28T11:05:00Z')")
+    assert ai.process_pending(path, backend=ai.FakeBackend())["done"] == 1
+
+
+def test_other_bad_requests_are_not_account_errors(monkeypatch):
+    import anthropic
+    import httpx
+
+    def bad(self, prompt):
+        resp = httpx.Response(400, request=httpx.Request("POST", "https://api.anthropic.com/v1/messages"))
+        raise anthropic.BadRequestError("prompt is too long", response=resp, body=None)
+
+    monkeypatch.setattr(config, "ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr(ai.RealBackend, "_call", bad)
+    try:
+        ai.RealBackend().call("x")
+    except ai.AccountError:
+        raise AssertionError("should be a normal, per-article failure")
+    except anthropic.BadRequestError:
+        pass

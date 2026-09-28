@@ -1,0 +1,26 @@
+# Runs the tests on every pull request and on every push to main.
+# The auto-updater on the host only deploys commits where this passed.
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the app image
+        run: docker build -t flamingo-watch:ci .
+      - name: Run the tests
+        run: docker run --rm -e RUN_SCHEDULER=0 flamingo-watch:ci python -m pytest -q -W ignore::DeprecationWarning
+      - name: Check the publisher image builds
+        run: docker build -f deploy/publisher.Dockerfile -t flamingo-publisher:ci .
+      - name: Check sources.yaml is valid
+        run: docker run --rm flamingo-watch:ci python -c "from app import fetcher; s, q = fetcher.load_sources(); assert s, 'no sources'; [x['url'] for x in s]; print(len(s), 'sources,', len(q), 'searches')"

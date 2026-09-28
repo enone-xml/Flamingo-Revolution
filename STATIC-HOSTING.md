@@ -44,7 +44,7 @@ Make sure these lines are there and filled in:
 ```
 SITE_URL=https://yourdomain.com
 EXPORT_DIR=/export
-COMPOSE_PROFILES=publish
+COMPOSE_PROFILES=publish,autoupdate
 CLOUDFLARE_API_TOKEN=paste-your-token
 CLOUDFLARE_ACCOUNT_ID=paste-your-account-id
 CF_PAGES_PROJECT=flamingo-watch
@@ -141,12 +141,36 @@ Copies the backup folder out of Docker into a Windows folder. Change the path to
 
 To restore one, follow DEPLOY.md step 7 ("Restore a backup").
 
-## 11. Updating
+## 11. Updating (automatic after a merged pull request)
+
+With `COMPOSE_PROFILES=publish,autoupdate` in `.env`, the **updater** container checks GitHub
+every 5 minutes. When `main` has a new commit **and its tests passed**, it pulls the
+commit and rebuilds the app. The uploader then publishes the new version. So merging a PR
+on GitHub updates the live site within about 10–15 minutes.
+
+The updater does nothing when:
+- the new commit's tests are still running or failed (it waits);
+- you edited tracked files by hand on your PC (commit or discard them first);
+- your PC has commits that aren't on GitHub (push them first).
+
+Watch what it does:
+
+```bash
+docker compose logs -f updater
+```
+Shows the updater's log. Press Ctrl+C to stop watching.
+
+To update by hand instead:
 
 ```bash
 cd /home/eno/flamingo_revolution && git pull && docker compose up -d --build
 ```
-Gets the latest code from GitHub and restarts with it. The next upload publishes the new version.
+Gets the latest code from GitHub and restarts with it.
+
+**Protect `main` on GitHub** (recommended for a public repo): go to **Settings → Branches →
+Add rule** for `main`, tick **Require a pull request before merging** and
+**Require status checks to pass** → `test`. Then nothing reaches your PC without passing the tests
+and getting your approval.
 
 ## 12. Monthly cost
 
