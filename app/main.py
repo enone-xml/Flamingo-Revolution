@@ -7,6 +7,7 @@ from email.utils import format_datetime
 from pathlib import Path
 from xml.sax.saxutils import escape
 
+import yaml
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, Response
@@ -215,6 +216,31 @@ def story_sq(request: Request, slug: str):
     return story_page(request, "sq", slug)
 
 
+def load_milestones() -> list[dict]:
+    try:
+        with open(config.TIMELINE_FILE, encoding="utf-8") as f:
+            return (yaml.safe_load(f) or {}).get("milestones") or []
+    except FileNotFoundError:
+        return []
+
+
+def timeline_page(request: Request, lang: str):
+    with db.session() as conn:
+        months = feed.timeline(conn, lang, load_milestones())
+    return render(request, "timeline.html", lang, "timeline", "/timeline",
+                  months=months, min_sources=feed.TIMELINE_MIN_SOURCES)
+
+
+@app.get("/timeline")
+def timeline_en(request: Request):
+    return timeline_page(request, "en")
+
+
+@app.get("/sq/timeline")
+def timeline_sq(request: Request):
+    return timeline_page(request, "sq")
+
+
 def digest_page(request: Request, lang: str):
     with db.session() as conn:
         items = digest.recent(conn, 14)
@@ -343,7 +369,7 @@ def robots():
                     media_type="text/plain")
 
 
-SITEMAP_PATHS = ["/", "/digest", "/about", "/sources"]
+SITEMAP_PATHS = ["/", "/timeline", "/digest", "/about", "/sources"]
 
 
 @app.get("/sitemap.xml")

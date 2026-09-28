@@ -1,0 +1,15 @@
+# Hand-picked milestones shown on the Timeline page, next to the events the site
+# detects automatically (stories covered by 3+ outlets).
+# Add one with a pull request: a date, one neutral sentence in English and
+# Albanian, and a link to a reliable source that says exactly that.
+milestones:
+  - date: 2026-05-16
+    en: "The first protest against the resort project is held at the Akërni construction site in the Pishë Poro–Narta area."
+    sq: "Mbahet protesta e parë kundër projektit të resortit në kantierin e Akërnit, në zonën Pishë Poro–Nartë."
+    source: Wikipedia
+    url: https://en.wikipedia.org/wiki/Flamingo_Revolution
+  - date: 2026-05-23
+    en: "Residents and environmental activists gather near the Narta Lagoon to protest the barbed-wire fencing of Pishë Poro–Narta beach, part of the protected Vjosa–Narta landscape."
+    sq: "Banorë dhe aktivistë mjedisorë mblidhen pranë Lagunës së Nartës për të protestuar kundër rrethimit me tel me gjemba të plazhit Pishë Poro–Nartë, pjesë e peizazhit të mbrojtur Vjosë–Nartë."
+    source: Wikipedia
+    url: https://en.wikipedia.org/wiki/Flamingo_Revolution

@@ -174,3 +174,47 @@ def feed_groups_all(conn, lang: str, days: int) -> list[dict]:
 
 def find_story(conn, lang: str, slug: str) -> dict | None:
     return next((g for g in story_groups(conn, lang) if g["slug"] == slug), None)
+
+
+TIMELINE_MIN_SOURCES = 3
+MONTHS = {
+    "en": ["January", "February", "March", "April", "May", "June", "July", "August",
+           "September", "October", "November", "December"],
+    "sq": ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht",
+           "Shtator", "Tetor", "Nëntor", "Dhjetor"],
+}
+
+
+def timeline(conn, lang: str, milestones: list[dict]) -> list[dict]:
+    """Main events, newest month first: stories covered by 3+ outlets (all time),
+    plus hand-picked milestones from timeline.yaml. Grouped by month."""
+    events = []
+    groups = query_groups(conn, lang, rng="all", per_page=1_000_000, max_rows=200_000)["groups"]
+    page_cutoff = _iso(datetime.now(timezone.utc) - RANGES["90d"])
+    for g in groups:
+        if len(g["sources"]) < TIMELINE_MIN_SOURCES:
+            continue
+        first = g["articles"][-1]
+        started = datetime.strptime(first["published_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        events.append({
+            "date": started.astimezone(TIRANA).strftime("%Y-%m-%d"),
+            "title": g["lead"]["title"], "summary": g["lead"]["summary"],
+            "n": len(g["sources"]), "tags": g["tags"],
+            # story pages exist for the last 90 days; older events link to the original report
+            "slug": g["slug"] if first["published_at"] >= page_cutoff else None,
+            "url": g["lead"]["url"], "source": g["lead"]["source"], "manual": False,
+        })
+    for m in milestones:
+        events.append({
+            "date": str(m["date"]), "title": m.get(lang) or m.get("en", ""), "summary": None,
+            "n": 0, "tags": [], "slug": None, "url": m.get("url"), "source": m.get("source"), "manual": True,
+        })
+    events.sort(key=lambda e: e["date"], reverse=True)
+    months = []
+    for e in events:
+        key = e["date"][:7]
+        if not months or months[-1]["key"] != key:
+            y, mo = key.split("-")
+            months.append({"key": key, "label": f"{MONTHS[lang][int(mo) - 1]} {y}", "events": []})
+        months[-1]["events"].append(e)
+    return months

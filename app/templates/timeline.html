@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ t('timeline_title') }} · {{ t('site_name') }}{% endblock %}
+{% block description %}{{ t('seo_desc_timeline') }}{% endblock %}
+{% block content %}
+<article class="page timeline">
+  <h1 class="page__title" data-split>{{ t('timeline_title') }}</h1>
+  <p class="timeline__intro" data-reveal>{{ t('timeline_intro', n=min_sources) }}</p>
+  {% for m in months %}
+  <section class="timeline__month" aria-labelledby="m-{{ m.key }}">
+    <h2 class="timeline__label" id="m-{{ m.key }}" data-reveal>{{ m.label }}</h2>
+    <ol class="timeline__list">
+      {% for e in m.events %}
+      <li class="timeline__event{% if e.manual %} timeline__event--milestone{% endif %}" data-reveal>
+        <time class="timeline__date" datetime="{{ e.date }}">{{ e.date[8:10] }}.{{ e.date[5:7] }}</time>
+        <div class="timeline__body">
+          <p class="timeline__meta">{% if e.manual %}{{ t('timeline_milestone') }}{% else %}{{ t('timeline_outlets', n=e.n) }}{% endif %}</p>
+          <h3 class="timeline__title">
+            {% if e.slug %}<a href="{{ url('/story/' ~ e.slug) }}">{{ e.title }}</a>
+            {% elif e.url %}<a href="{{ e.url }}" rel="noopener" target="_blank">{{ e.title }}</a>
+            {% else %}{{ e.title }}{% endif %}
+          </h3>
+          {% if e.summary %}<p class="timeline__summary">{{ e.summary }}</p>{% endif %}
+          {% if e.manual and e.source %}<p class="timeline__src">{{ t('digest_sources') }}: <a href="{{ e.url }}" rel="noopener" target="_blank">{{ e.source }}</a></p>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% else %}
+  <p>{{ t('timeline_empty', n=min_sources) }}</p>
+  {% endfor %}
+</article>
+{% endblock %}

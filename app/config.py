@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 DB_PATH = os.getenv("DB_PATH", str(ROOT / "data" / "flamingo.db"))
 SOURCES_FILE = os.getenv("SOURCES_FILE", str(ROOT / "sources.yaml"))
+TIMELINE_FILE = os.getenv("TIMELINE_FILE", str(ROOT / "timeline.yaml"))
 SITE_URL = os.getenv("SITE_URL", "http://localhost:8000").rstrip("/")
 FETCH_INTERVAL_MINUTES = int(os.getenv("FETCH_INTERVAL_MINUTES", "10"))
 

@@ -151,3 +151,17 @@ def test_daily_digest(client, monkeypatch):
     root = ET.fromstring(client.get("/digest.xml").content)
     assert len(root.findall("./channel/item")) == 1
     assert "Protests continue." in client.get("/").text              # teaser on the home page
+
+
+def test_timeline(client, monkeypatch, tmp_path):
+    from app import feed as feedmod
+    ms = tmp_path / "t.yaml"
+    ms.write_text("milestones:\n  - {date: 2026-05-16, en: 'First protest.', sq: 'Protesta e parë.', source: Wikipedia, url: 'https://en.wikipedia.org/wiki/Flamingo_Revolution'}\n")
+    monkeypatch.setattr(config, "TIMELINE_FILE", str(ms))
+    r = client.get("/sq/timeline")
+    assert r.status_code == 200 and "Protesta e parë." in r.text and "Maj 2026" in r.text
+    # no story in the fixture has 3 outlets yet; lower the bar to check auto events appear
+    monkeypatch.setattr(feedmod, "TIMELINE_MIN_SOURCES", 2)
+    r = client.get("/timeline")
+    assert "First protest." in r.text and "/story/zvernec-protest-" in r.text
+    assert "/timeline" in client.get("/sitemap.xml").text
