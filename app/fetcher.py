@@ -89,6 +89,10 @@ def is_duplicate(conn, url: str, title_norm: str, published: datetime) -> bool:
     )
 
 
+ROBOTS_TTL = 24 * 3600  # re-check each site's robots.txt once a day
+_robots_cache: dict[str, tuple[float, "urllib.robotparser.RobotFileParser | None"]] = {}
+
+
 class PoliteClient:
     """HTTP client that obeys robots.txt and waits between requests to a host."""
 
@@ -98,13 +102,13 @@ class PoliteClient:
             timeout=httpx.Timeout(20.0),
             follow_redirects=True,
         )
-        self._robots: dict[str, urllib.robotparser.RobotFileParser | None] = {}
         self._last_hit: dict[str, float] = {}
 
     def allowed(self, url: str) -> bool:
         p = urlparse(url)
         base = f"{p.scheme}://{p.netloc}"
-        if base not in self._robots:
+        cached = _robots_cache.get(base)
+        if not cached or time.monotonic() - cached[0] > ROBOTS_TTL:
             rp = urllib.robotparser.RobotFileParser()
             try:
                 r = self.http.get(base + "/robots.txt")
@@ -114,8 +118,8 @@ class PoliteClient:
                     rp.parse(r.text.splitlines())
             except httpx.HTTPError:
                 rp = None
-            self._robots[base] = rp
-        rp = self._robots[base]
+            _robots_cache[base] = (time.monotonic(), rp)
+        rp = _robots_cache[base][1]
         return rp is None or rp.can_fetch(config.USER_AGENT, url)
 
     def get(self, url: str, headers: dict | None = None, min_gap: float = HOST_MIN_GAP) -> httpx.Response:

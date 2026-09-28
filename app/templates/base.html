@@ -17,8 +17,8 @@
   <link rel="icon" href="/static/favicon.svg?v={{ v }}" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png?v={{ v }}">
   <link rel="alternate" type="application/rss+xml" title="{{ t('site_name') }}" href="{{ rss_url }}">
-  <link rel="preload" href="/static/fonts/Anton-400-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/static/fonts/IBMPlexSans-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/Anton-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/site.css?v={{ v }}">
   <meta property="og:site_name" content="{{ t('site_name') }}">
   <meta property="og:title" content="{{ self.title()|striptags }}">
@@ -50,7 +50,7 @@
     ]
   }|tojson }}</script>
 </head>
-<body class="page-{{ page }}"{% if static %} data-static="1"{% endif %}>
+<body class="page-{{ page }}" data-lenis-src="/static/js/vendor/lenis.min.js?v={{ v }}"{% if static %} data-static="1"{% endif %}>
   <a class="skip" href="{% if page == 'home' %}#feed{% else %}#main{% endif %}">{{ t('skip') }}</a>
 
   <div class="ticker" aria-label="{{ t('latest') }}">
@@ -123,7 +123,6 @@
   }|tojson }}</script>
   <script src="/static/js/vendor/gsap.min.js?v={{ v }}" defer></script>
   <script src="/static/js/vendor/ScrollTrigger.min.js?v={{ v }}" defer></script>
-  <script src="/static/js/vendor/lenis.min.js?v={{ v }}" defer></script>
   <script src="/static/js/site.js?v={{ v }}" defer></script>
 </body>
 </html>

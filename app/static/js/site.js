@@ -49,7 +49,14 @@
 
   // ------------------------------------------------------------ smooth scroll
   let lenis = null;
-  if (motion && finePointer && typeof window.Lenis !== "undefined") {
+  // Smooth scrolling only helps mouse wheels, so phones never download it.
+  if (motion && finePointer && document.body.dataset.lenisSrc) {
+    const s = document.createElement("script");
+    s.src = document.body.dataset.lenisSrc;
+    s.onload = startLenis;
+    document.head.append(s);
+  }
+  function startLenis() {
     lenis = new Lenis({ lerp: 0.12, smoothWheel: true });
     lenis.on("scroll", ScrollTrigger.update);
     gsap.ticker.add((time) => lenis.raf(time * 1000));

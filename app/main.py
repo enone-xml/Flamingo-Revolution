@@ -16,7 +16,8 @@ from fastapi.templating import Jinja2Templates
 from . import ai, config, db, feed, fetcher, i18n, scheduler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-logging.getLogger("httpx").setLevel(logging.WARNING)
+for noisy in ("httpx", "httpx2"):
+    logging.getLogger(noisy).setLevel(logging.WARNING)
 HERE = Path(__file__).parent
 
 
