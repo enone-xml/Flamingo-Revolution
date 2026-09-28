@@ -1,0 +1,51 @@
+# News sources for Flamingo Watch.
+#
+# Every feed below was tested on 2026-09-28: it returned valid entries and the
+# site's robots.txt allows it. See SOURCES.md for the full test table,
+# including feeds that were dropped and why.
+#
+# Fields:
+#   name     - shown on the site next to each article
+#   url      - the RSS/Atom feed
+#   lang     - main language of the feed: sq (Albanian) or en (English)
+#   country  - AL for Albanian outlets (looser keyword filter), INT otherwise
+#   type     - rss (default) or gdelt (keyword search, see "searches" below)
+#   enabled  - set to false to pause a source without deleting it
+
+sources:
+  # --- Albanian outlets, Albanian language ---
+  - {name: ABC News Albania, url: "https://abcnews.al/feed/", lang: sq, country: AL}
+  - {name: Balkanweb, url: "https://www.balkanweb.com/feed/", lang: sq, country: AL}
+  - {name: Citizens Channel, url: "https://citizens.al/feed/", lang: sq, country: AL}
+  - {name: Euronews Albania, url: "https://euronews.al/feed/", lang: sq, country: AL}
+  - {name: Faktoje, url: "https://faktoje.al/feed/", lang: sq, country: AL}
+  - {name: Gazeta Shqiptare, url: "https://gazetashqiptare.al/feed/", lang: sq, country: AL}
+  - {name: JavaNews, url: "https://javanews.al/feed/", lang: sq, country: AL}
+  - {name: Lajme.al, url: "https://www.lajme.al/feed/", lang: sq, country: AL}
+  - {name: News24, url: "https://www.news24.al/feed/", lang: sq, country: AL}
+  - {name: Panorama, url: "https://www.panorama.com.al/feed/", lang: sq, country: AL}
+  - {name: Reporter.al, url: "https://www.reporter.al/feed/", lang: sq, country: AL}
+  - {name: Vizion Plus, url: "https://www.vizionplus.tv/feed/", lang: sq, country: AL}
+  - {name: Radio Evropa e Lirë, url: "https://www.evropaelire.org/api/", lang: sq, country: AL}
+
+  # --- Albanian outlets, English language ---
+  - {name: Euronews Albania (EN), url: "https://euronews.al/en/feed/", lang: en, country: AL}
+  - {name: Tirana Times, url: "https://www.tiranatimes.com/feed/", lang: en, country: AL}
+
+  # --- International outlets (strict keyword filter) ---
+  - {name: Al Jazeera, url: "https://www.aljazeera.com/xml/rss/all.xml", lang: en, country: INT}
+  - {name: BBC News Europe, url: "https://feeds.bbci.co.uk/news/world/europe/rss.xml", lang: en, country: INT}
+  - {name: DW, url: "https://rss.dw.com/rdf/rss-en-all", lang: en, country: INT}
+  - {name: Euronews, url: "https://www.euronews.com/rss", lang: en, country: INT}
+  - {name: France 24, url: "https://www.france24.com/en/europe/rss", lang: en, country: INT}
+  - {name: Politico Europe, url: "https://www.politico.eu/feed/", lang: en, country: INT}
+  - {name: The Guardian (Albania), url: "https://www.theguardian.com/world/albania/rss", lang: en, country: INT}
+
+# Keyword searches across many outlets, via the free GDELT news API
+# (https://www.gdeltproject.org). Google News RSS is not used because its
+# robots.txt disallows automated access to /rss. Bing News RSS is not used
+# because its terms only allow personal, non-commercial use.
+# GDELT rate-limits hard, so the fetcher waits 30 seconds between searches.
+searches:
+  - {name: "GDELT English", query: '("Flamingo Revolution" OR Zvernec OR Sazan OR "Vjosa-Narta" OR "Edi Rama") sourcelang:english', lang: en}
+  - {name: "GDELT Albanian", query: '("Revolucioni i Flamingove" OR Zvernec OR Sazan OR "Edi Rama" OR "protesta Tirane") sourcelang:albanian', lang: sq}

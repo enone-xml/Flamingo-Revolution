@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    image: flamingo-watch:latest
+    env_file: .env
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - flamingo-data:/data
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+volumes:
+  flamingo-data:

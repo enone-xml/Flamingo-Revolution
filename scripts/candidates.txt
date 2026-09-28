@@ -1,0 +1,69 @@
+Balkan Insight Albania | feed | https://balkaninsight.com/category/bi/albania/feed/
+Balkan Insight RD Albania | feed | https://balkaninsight.com/category/rd/rd-albania/feed/
+ABC News Albania | feed | https://abcnews.al/feed/
+News24 | feed | https://www.news24.al/feed/
+Vizion Plus | feed | https://www.vizionplus.tv/feed/
+Lajme.al | feed | https://www.lajme.al/feed/
+Scan TV | feed | https://www.scan-tv.com/feed/
+Gazeta Dita | feed | https://gazetadita.al/feed/
+JavaNews | feed | https://javanews.al/feed/
+Exit News | home | https://exit.al/en/
+Exit (sq) | home | https://exit.al/
+Reporter.al | home | https://www.reporter.al/
+Euronews Albania | home | https://euronews.al/
+Euronews Albania EN | home | https://euronews.al/en/
+RTSH | home | https://rtsh.al/
+Top Channel | home | https://top-channel.tv/
+Tirana Times | home | https://www.tiranatimes.com/
+Ora News | home | https://www.oranews.tv/
+Shqiptarja | home | https://shqiptarja.com/
+Panorama | home | https://www.panorama.com.al/
+Gazeta Shqiptare | home | https://www.gazetashqiptare.al/
+Albanian Daily News | home | https://albaniandailynews.com/
+Albanian Post | home | https://albanianpost.com/
+Politiko | home | https://politiko.al/
+Syri | home | https://www.syri.net/
+Klan Kosova | home | https://klankosova.tv/
+Koha Kosovo | home | https://www.koha.net/
+Balkanweb | home | https://www.balkanweb.com/
+Fax News | home | https://faxnews.al/
+BIRN/Balkan Insight all | feed | https://balkaninsight.com/feed/
+Al Jazeera | feed | https://www.aljazeera.com/xml/rss/all.xml
+BBC Europe | feed | https://feeds.bbci.co.uk/news/world/europe/rss.xml
+Guardian Albania | feed | https://www.theguardian.com/world/albania/rss
+Euronews EN | home | https://www.euronews.com/
+Politico Europe | home | https://www.politico.eu/
+DW English | home | https://www.dw.com/en/
+RFE/RL Balkan | home | https://www.evropaelire.org/
+Reuters | home | https://www.reuters.com/
+France24 Europe | feed | https://www.france24.com/en/europe/rss
+RTSH Lajme | home | https://lajme.rtsh.al/
+Euronews EN | feed | https://www.euronews.com/rss
+DW English | feed | https://rss.dw.com/rdf/rss-en-all
+DW Albanian | home | https://www.dw.com/sq/
+Zëri i Amerikës | home | https://www.zeriamerikes.com/
+Exit article | home | https://exit.al/en/category/politics/
+Top Channel news | home | https://top-channel.tv/lajme/
+Albanian Daily News | home | https://albaniandailynews.com/news
+Shqiptarja | home | https://shqiptarja.com/lajm
+Koha | home | https://www.koha.net/arberi
+AP Europe | home | https://apnews.com/hub/albania
+Koha Jonë | home | https://kohajone.com/
+Vox News | home | https://www.voxnews.al/
+Lapsi.al | home | https://lapsi.al/
+Citizens Channel | home | https://citizens.al/
+Faktoje | home | https://faktoje.al/
+Dosja.al | home | https://dosja.al/
+Politiko | home | https://politiko.al/
+Exit EN wp | feed | https://exit.al/en/feed/
+Exit SQ wp | feed | https://exit.al/feed/
+Top Channel wp | feed | https://top-channel.tv/feed/
+Shqiptarja wp | feed | https://shqiptarja.com/feed
+Syri wp | feed | https://www.syri.net/feed
+Albanian Daily News wp | feed | https://albaniandailynews.com/feed
+Ora News wp | feed | https://www.oranews.tv/feed
+Panorama wp | feed | https://www.panorama.com.al/feed/
+Fax News wp | feed | https://faxnews.al/feed/
+Albanian Post wp | feed | https://albanianpost.com/feed/
+RTSH wp | feed | https://lajme.rtsh.al/rss
+Zeri i Amerikes api | feed | https://www.zeriamerikes.com/api/
