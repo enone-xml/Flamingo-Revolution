@@ -387,6 +387,68 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 .card__group time { color: var(--muted); font-size: .75rem; margin-left: .3rem; white-space: nowrap; }
 .load-more { display: flex; width: max-content; margin: 2rem auto 0; }
 
+/* ---------------------------------------------------------------- search, share, digest teaser */
+.search { display: block; margin: .9rem 0 .2rem; }
+.search > span {
+  display: block; color: var(--muted); margin-bottom: .45rem;
+  font: 600 .7rem/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase;
+}
+.search input {
+  width: 100%; min-height: 44px; padding: .6rem .9rem; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--line); color: var(--text);
+}
+.search input::placeholder { color: var(--muted); }
+.search input:hover { border-color: var(--pink-dim); }
+.search input:focus { border-color: var(--pink); }
+.card__links { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .35rem .9rem; margin-left: auto; }
+.card__story { font-size: .82rem; font-weight: 600; text-decoration: none; position: relative; z-index: 1; }
+.card__story:hover { text-decoration: underline; }
+.card__share {
+  position: relative; z-index: 1; background: none; border: 1px solid var(--line); border-radius: 999px;
+  color: var(--text); font-size: .78rem; font-weight: 600; padding: .3rem .75rem; min-height: 32px; cursor: pointer;
+}
+.card__share:hover { border-color: var(--pink); color: var(--pink); }
+.toast {
+  position: fixed; left: 50%; bottom: 1.5rem; z-index: 96; transform: translate(-50%, 150%);
+  background: var(--text); color: var(--bg); font-weight: 600; padding: .6rem 1.1rem; border-radius: 999px;
+  transition: transform .3s var(--ease); pointer-events: none;
+  max-width: calc(100vw - 32px); overflow-wrap: anywhere; text-align: center;
+}
+.toast.is-on { transform: translate(-50%, 0); }
+.digest-teaser {
+  display: block; margin: 0 0 1.25rem; padding: .9rem 1.1rem; border: 1px solid var(--line); border-left: 3px solid var(--green);
+  border-radius: 4px; background: var(--card); color: var(--text); text-decoration: none;
+}
+.digest-teaser:hover { border-color: var(--pink); border-left-color: var(--green); }
+.digest-teaser__label { display: block; color: var(--pink); font: 600 .7rem/1.4 var(--body); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .25rem; }
+.digest-teaser__text { font-size: .95rem; }
+
+/* ---------------------------------------------------------------- story + digest pages */
+.story__kicker { color: var(--muted); font: 600 .75rem/1.4 var(--body); letter-spacing: .12em; text-transform: uppercase; margin: 0 0 1rem; }
+.story__title { font: 600 clamp(1.6rem, 6vw, 2.8rem)/1.2 var(--body); margin-bottom: 1rem; max-width: 30ch; }
+.story__summary { font-size: 1.1rem; color: #D8D8D2; max-width: 62ch; margin: 0 0 1.25rem; }
+.story__meta { display: flex; flex-wrap: wrap; gap: .5rem 2rem; margin: 0 0 1rem; }
+.story__meta dt { color: var(--muted); font: 600 .7rem/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; }
+.story__meta dd { margin: .2rem 0 0; }
+.story__tags { margin-bottom: 1.25rem; }
+.story__actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: 0 0 2rem; }
+.story__h2 { font: 400 1.9rem/1.1 var(--display); text-transform: uppercase; margin: 0 0 .75rem; }
+.story__list { list-style: none; margin: 0 0 1.5rem; padding: 0; counter-reset: s; }
+.story__list li { border-top: 1px solid var(--line); }
+.story__list a { display: grid; gap: .2rem; padding: .9rem 0; color: var(--text); text-decoration: none; }
+.story__list a:hover .story__headline { color: var(--pink); }
+.story__src { color: var(--pink); font: 600 .72rem/1.3 var(--body); letter-spacing: .1em; text-transform: uppercase; }
+.story__headline { font-weight: 600; }
+.story__sum { color: #D8D8D2; font-size: .92rem; }
+.story__list time { color: var(--muted); font-size: .78rem; }
+.digest__day { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1.5rem; }
+.digest__day h2 { font: 400 1.6rem/1.1 var(--display); color: var(--pink); margin: 0 0 .6rem; }
+.digest__points { padding-left: 1.2rem; }
+.digest__points li { margin-bottom: .7rem; }
+.digest__refs { display: block; color: var(--muted); font-size: .8rem; margin-top: .15rem; }
+.digest__refs a { color: var(--muted); }
+.digest__refs a:hover { color: var(--pink); }
+
 /* ---------------------------------------------------------------- inner pages */
 .page { padding: 3rem var(--gutter) 5rem; max-width: 1100px; }
 .page__title { font: 400 clamp(3rem, 14vw, 9rem)/.9 var(--display); text-transform: uppercase; color: var(--pink); margin-bottom: 2rem; overflow: hidden; }

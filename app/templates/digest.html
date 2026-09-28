@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ t('digest_title') }} · {{ t('site_name') }}{% endblock %}
+{% block description %}{{ t('seo_desc_digest') }}{% endblock %}
+{% block content %}
+<article class="page digest">
+  <h1 class="page__title" data-split>{{ t('digest_title') }}</h1>
+  <div class="page__body">
+    <p data-reveal>{{ t('digest_intro') }} <a href="{{ '/digest.xml' if lang == 'en' else '/sq/digest.xml' }}">RSS</a></p>
+    {% for d in digests %}
+    <section class="digest__day" id="d-{{ d.day }}" data-reveal>
+      <h2><time datetime="{{ d.day }}">{{ d.day }}</time></h2>
+      <ol class="digest__points">
+        {% for p in d.points %}
+        <li>{{ p[lang] }}
+          {% if p.refs %}<span class="digest__refs">{% for r in p.refs %}{% if r.slug %}<a href="{{ url('/story/' ~ r.slug) }}">{{ r.source }}</a>{% else %}<a href="{{ r.url }}" rel="noopener" target="_blank">{{ r.source }}</a>{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+    {% else %}
+    <p>{{ t('digest_empty') }}</p>
+    {% endfor %}
+  </div>
+</article>
+{% endblock %}

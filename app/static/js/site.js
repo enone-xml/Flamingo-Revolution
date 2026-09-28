@@ -271,6 +271,39 @@
     loop();
   }
 
+  // ------------------------------------------------------------ share
+  // Phones: the system share sheet (WhatsApp, Telegram…). Elsewhere: copy the link.
+  const canShare = true;  // share sheet, clipboard, or at worst the link shown in a message
+  const showShare = (root = document) => { if (canShare) $$(".share", root).forEach((b) => { b.hidden = false; }); };
+  let toastTimer;
+  function toast(text) {
+    let el = $(".toast");
+    if (!el) { el = h("div", { class: "toast", role: "status", "aria-live": "polite" }); document.body.append(el); }
+    el.textContent = text; el.classList.add("is-on");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("is-on"), 2200);
+  }
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (_) { /* fall back below */ }
+    const ta = h("textarea", { class: "sr-only", readonly: true }, text);
+    document.body.append(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest(".share");
+    if (!b) return;
+    e.preventDefault();
+    const url = b.dataset.shareUrl, title = b.dataset.shareTitle;
+    if (navigator.share) {
+      try { await navigator.share({ title, url }); } catch (_) { /* closed the share sheet */ }
+      return;
+    }
+    toast(await copyText(url) ? I18N.link_copied : url);  // worst case: show the link to copy by hand
+  });
+  showShare();
+
   // ------------------------------------------------------------ feed
   const cards = $(".cards");
   if (!cards) { refreshTimes(); return; }
@@ -304,7 +337,11 @@
       a.ai && a.original_title && a.original_title !== a.title
         ? h("p", { class: "card__orig", lang: a.lang }, h("span", {}, I18N.original_headline + ":"), " " + a.original_title) : null,
       h("div", { class: "card__foot" }, tags,
-        h("a", { class: "card__read", href: a.url, rel: "noopener", target: "_blank" }, fmt(I18N.read_original, { source: a.source }) + " ", h("span", { "aria-hidden": "true" }, "↗"))),
+        h("span", { class: "card__links" },
+          g.slug ? h("a", { class: "card__story", href: I18N.story_base + g.slug }, I18N.story_page + " →") : null,
+          h("a", { class: "card__read", href: a.url, rel: "noopener", target: "_blank" }, fmt(I18N.read_original, { source: a.source }) + " ", h("span", { "aria-hidden": "true" }, "↗")),
+          h("button", { class: "card__share share", type: "button", hidden: !canShare,
+            "data-share-url": g.slug ? I18N.story_base + g.slug : a.url, "data-share-title": a.title }, I18N.share))),
     );
     if (g.articles.length > 1) {
       const id = `grp-${g.max_id}`;
@@ -329,6 +366,8 @@
   // ---- data source: live API (server) or pre-built JSON files (static site)
   const STATIC = document.body.dataset.static === "1";
   const RANGES = { "24h": 864e5, "7d": 7 * 864e5, "30d": 30 * 864e5 };
+  // Lowercase and drop accents, so "zvernec" finds "Zvërnec" (same as the server).
+  const norm = (s) => (s || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
   const cache = {};  // file name -> { data, at }
   async function staticData(file, fresh) {
@@ -343,12 +382,14 @@
 
   async function staticQuery(p, sinceId) {
     const tag = p.get("tag"), source = p.get("source"), lang = p.get("lang"), range = p.get("range") || "7d";
-    // 24h/7d use the small file; 30 days and "all" use the 30-day file.
-    const long = range === "30d" || range === "all";
+    const terms = norm(p.get("q") || "").split(/\s+/).filter(Boolean);
+    // 24h/7d use the small file; 30 days, "all" and searches use the 30-day file.
+    const long = range === "30d" || range === "all" || terms.length > 0;
     const all = await staticData(`articles-${ui}${long ? "-30d" : ""}.json`, !!sinceId);
     const since = RANGES[range] ? Date.now() - RANGES[range] : 0;
+    const found = (a) => { const hay = norm([a.title, a.original_title, a.summary, a.source].join(" ")); return terms.every((t) => hay.includes(t)); };
     const keep = (a) => (!tag || a.tags.includes(tag)) && (!source || a.source === source)
-      && (!lang || a.lang === lang) && Date.parse(a.published_at) >= since;
+      && (!lang || a.lang === lang) && Date.parse(a.published_at) >= since && (!terms.length || found(a));
     const groups = [];
     for (const g of all.groups) {
       const arts = g.articles.filter(keep);
@@ -429,10 +470,17 @@
     load();
   });
   form.addEventListener("submit", (e) => { e.preventDefault(); form.dispatchEvent(new Event("change")); });
+  let searchTimer;
+  const searchBox = form.elements.q;
+  if (searchBox) searchBox.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => form.dispatchEvent(new Event("change")), 350);
+  });
   const reset = $(".btn--ghost", form);
   if (reset) reset.addEventListener("click", (e) => {
     e.preventDefault();
     form.reset();
+    if (searchBox) searchBox.value = "";
     $$('input[name="tag"]', form)[0].checked = true;
     $$("select", form).forEach((s) => { s.selectedIndex = s.name === "range" ? 1 : 0; });
     form.dispatchEvent(new Event("change"));

@@ -11,7 +11,11 @@
   {% if a.ai and a.original_title != a.title %}<p class="card__orig" lang="{{ a.lang }}"><span>{{ t('original_headline') }}:</span> {{ a.original_title }}</p>{% endif %}
   <div class="card__foot">
     {% if g.tags %}<ul class="card__tags">{% for tag in g.tags %}<li class="tag tag--{{ tag|lower }}">{{ tag_label(tag) }}</li>{% endfor %}</ul>{% endif %}
-    <a class="card__read" href="{{ a.url }}" rel="noopener" target="_blank">{{ t('read_original', source=a.source) }} <span aria-hidden="true">↗</span></a>
+    <span class="card__links">
+      {% if g.slug %}<a class="card__story" href="{{ url('/story/' ~ g.slug) }}">{{ t('story_page') }} →</a>{% endif %}
+      <a class="card__read" href="{{ a.url }}" rel="noopener" target="_blank">{{ t('read_original', source=a.source) }} <span aria-hidden="true">↗</span></a>
+      <button class="card__share share" type="button" hidden data-share-url="{% if g.slug %}{{ site_url }}{{ url('/story/' ~ g.slug) }}{% else %}{{ a.url }}{% endif %}" data-share-title="{{ a.title }}">{{ t('share') }}</button>
+    </span>
   </div>
   {% if g.articles|length > 1 %}
   <button class="card__toggle" type="button" aria-expanded="false" aria-controls="grp-{{ g.max_id }}">

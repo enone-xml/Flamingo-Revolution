@@ -26,7 +26,12 @@ PAGES = {
     "/sq/feed.xml": "sq/feed.xml",
     "/robots.txt": "robots.txt",
     "/sitemap.xml": "sitemap.xml",
+    "/digest": "digest.html",
+    "/sq/digest": "sq/digest.html",
+    "/digest.xml": "digest.xml",
+    "/sq/digest.xml": "sq/digest.xml",
 }
+MAX_STORY_PAGES = 3000  # per language; keeps the site far below Cloudflare's 20,000-file limit
 
 # Security and caching headers, in Cloudflare Pages' _headers format
 # (other hosts ignore this file).
@@ -42,6 +47,10 @@ HEADERS = """/*
 /feed.xml
   Content-Type: application/rss+xml; charset=utf-8
 /sq/feed.xml
+  Content-Type: application/rss+xml; charset=utf-8
+/digest.xml
+  Content-Type: application/rss+xml; charset=utf-8
+/sq/digest.xml
   Content-Type: application/rss+xml; charset=utf-8
 https://:project.pages.dev/*
   X-Robots-Tag: noindex
@@ -59,7 +68,7 @@ def _slim(article: dict) -> dict:
 def _articles_json(conn, lang: str, rng: str) -> dict:
     data = feed.query_groups(conn, lang, rng=rng, per_page=100_000, max_rows=50_000)
     groups = [
-        {"key": g["key"], "articles": [_slim(a) for a in g["articles"]]}
+        {"key": g["key"], "slug": g["slug"], "articles": [_slim(a) for a in g["articles"]]}
         for g in data["groups"]
     ]
     return {"groups": groups}
@@ -96,6 +105,20 @@ def run(export_dir: str | None = None) -> Path:
         target = build / out
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(resp.content)
+
+    # One page per story covered by 2+ outlets (last 90 days), rendered straight from the
+    # template instead of through the web app, which would re-query for every page.
+    story_tpl = main.templates.get_template("story.html")
+    with db.session() as conn:
+        for lang in ("en", "sq"):
+            ticker = feed.latest(conn, lang, 5)
+            for g in feed.story_groups(conn, lang)[:MAX_STORY_PAGES]:
+                path = f"/story/{g['slug']}"
+                ctx = {**main.page_context(lang, "story", path, True), "ticker": ticker,
+                       **main.story_context(g, lang)}
+                out = build / ("sq" if lang == "sq" else "") / (path.lstrip("/") + ".html")
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_text(story_tpl.render(ctx), encoding="utf-8")
 
     # Cloudflare Pages serves 404.html for unknown URLs (with a real 404 status).
     (build / "404.html").write_bytes(client.get("/this-page-does-not-exist", headers={"X-Static-Export": "1"}).content)

@@ -1,12 +1,29 @@
 """Queries for the website: filtered, grouped articles and site stats."""
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
+
+from .keywords import normalize
 
 TIRANA = ZoneInfo("Europe/Tirane")
 GROUP_SPAN = timedelta(days=3)  # a story key only groups articles this close together
 
-RANGES = {"24h": timedelta(hours=24), "7d": timedelta(days=7), "30d": timedelta(days=30)}
+RANGES = {"24h": timedelta(hours=24), "7d": timedelta(days=7), "30d": timedelta(days=30),
+          "90d": timedelta(days=90)}
+STORY_MIN_SOURCES = 2  # a story gets its own page when at least this many outlets covered it
+
+
+def story_slug(group_key: str) -> str:
+    """URL-safe, stable name for a story page, e.g. 'tirana-protest-121'."""
+    return re.sub(r"[^a-z0-9-]+", "-", group_key.lower()).strip("-")[:80]
+
+
+def matches(art: dict, terms: list[str]) -> bool:
+    """Search: every word must appear in the title, original title, summary or source
+    (case and accents ignored, so 'zvernec' finds 'Zvërnec')."""
+    hay = normalize(" ".join(filter(None, (art["title"], art["original_title"], art["summary"], art["source"]))))
+    return all(t in hay for t in terms)
 VISIBLE = "(a.relevant = 1 OR a.ai_status IN ('keyword_only', 'failed'))"
 
 
@@ -45,7 +62,7 @@ def article_dict(row, lang: str) -> dict:
 
 
 def query_groups(conn, lang="en", tag=None, source=None, src_lang=None, rng="7d",
-                 page=1, per_page=20, since_id=None, max_rows=2000) -> dict:
+                 page=1, per_page=20, since_id=None, max_rows=2000, q=None) -> dict:
     """Return story groups, newest first. Articles sharing a story_key are one group."""
     where, args = [VISIBLE], []
     if rng in RANGES:
@@ -66,9 +83,12 @@ def query_groups(conn, lang="en", tag=None, source=None, src_lang=None, rng="7d"
         (*args, max_rows),
     ).fetchall()
 
+    terms = normalize(q).split() if q else []
     groups, index = [], {}
     for row in rows:
         art = article_dict(row, lang)
+        if terms and not matches(art, terms):
+            continue
         key = art["story_key"] or f"id-{art['id']}"
         if key in index and _age_gap(groups[index[key]]["articles"][0], art) > GROUP_SPAN:
             key = f"{key}@{art['published_at'][:10]}"  # same slug, different event days apart
@@ -83,6 +103,20 @@ def query_groups(conn, lang="en", tag=None, source=None, src_lang=None, rng="7d"
         g["max_id"] = max(a["id"] for a in g["articles"])
         g["sources"] = sorted({a["source"] for a in g["articles"]})
         g["tags"] = sorted({t for a in g["articles"] for t in a["tags"]})
+        g["slug"] = None
+        if len(g["sources"]) >= STORY_MIN_SOURCES:
+            # Name + the day the story started. Looked up in the whole database, not just
+            # this view, so the link is the same in the 24h/7d/30d views and on its page.
+            base = g["key"].split("@")[0]
+            started = g["articles"][-1]["published_at"]
+            if not base.startswith("id-"):
+                window = _iso(datetime.strptime(g["lead"]["published_at"], "%Y-%m-%dT%H:%M:%SZ") - GROUP_SPAN)
+                row = conn.execute(
+                    f"SELECT MIN(a.published_at) FROM articles a WHERE {VISIBLE} AND a.story_key = ? AND a.published_at >= ?",
+                    (base, window),
+                ).fetchone()
+                started = min(started, row[0] or started)
+            g["slug"] = story_slug(f"{base}-{started[:10]}")
 
     total = len(groups)
     new_count = sum(1 for g in groups if since_id and g["max_id"] > since_id) if since_id else 0
@@ -125,3 +159,18 @@ def source_names(conn) -> list[str]:
     return [r[0] for r in conn.execute(
         f"SELECT DISTINCT a.source FROM articles a WHERE {VISIBLE} ORDER BY a.source"
     ).fetchall()]
+
+
+def story_groups(conn, lang: str, days: int = 90) -> list[dict]:
+    """Every story covered by 2+ outlets in the last `days` days (these get pages)."""
+    data = feed_groups_all(conn, lang, days)
+    return [g for g in data if g["slug"]]
+
+
+def feed_groups_all(conn, lang: str, days: int) -> list[dict]:
+    rng = "90d" if days > 30 else "30d"
+    return query_groups(conn, lang, rng=rng, per_page=100_000, max_rows=50_000)["groups"]
+
+
+def find_story(conn, lang: str, slug: str) -> dict | None:
+    return next((g for g in story_groups(conn, lang) if g["slug"] == slug), None)

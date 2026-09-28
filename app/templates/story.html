@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% set lead = story.lead %}
+{% block title %}{{ lead.title|truncate(55, True, '…') }} · {{ t('site_name') }}{% endblock %}
+{% block description %}{{ desc|truncate(150, True, '…') }}{% endblock %}
+{% block content %}
+<article class="page story">
+  <p class="story__kicker"><span class="live-dot" aria-hidden="true"></span>{{ t('story_sources', n=n) }}</p>
+  <h1 class="story__title">{{ lead.title }}</h1>
+  {% if lead.summary %}<p class="story__summary">{{ lead.summary }}</p>{% endif %}
+  <dl class="story__meta">
+    <div><dt>{{ t('first_reported') }}</dt><dd><time datetime="{{ first.published_at }}" data-ago>{{ ago(first.published_at) }}</time> · {{ first.source }}</dd></div>
+    <div><dt>{{ t('last_update') }}</dt><dd><time datetime="{{ lead.published_at }}" data-ago>{{ ago(lead.published_at) }}</time> · {{ lead.source }}</dd></div>
+  </dl>
+  {% if story.tags %}<ul class="card__tags story__tags">{% for tag in story.tags %}<li class="tag tag--{{ tag|lower }}">{{ tag_label(tag) }}</li>{% endfor %}</ul>{% endif %}
+  <div class="story__actions">
+    <button class="btn btn--pink share" type="button" hidden data-share-url="{{ site_url }}{{ url('/story/' ~ story.slug) }}" data-share-title="{{ lead.title }}">{{ t('share') }}</button>
+    <a class="btn btn--ghost" href="{{ url('/') }}#feed">← {{ t('back_to_feed') }}</a>
+  </div>
+  <h2 class="story__h2">{{ t('digest_sources') }}</h2>
+  <ol class="story__list">
+    {% for a in story.articles %}
+    <li>
+      <a href="{{ a.url }}" rel="noopener" target="_blank">
+        <span class="story__src">{{ a.source }}</span>
+        <span class="story__headline" lang="{{ a.lang }}">{{ a.original_title }}</span>
+        {% if a.summary and a.summary != lead.summary %}<span class="story__sum">{{ a.summary }}</span>{% endif %}
+        <time datetime="{{ a.published_at }}" data-ago>{{ ago(a.published_at) }}</time>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+  <p class="feed__ai-note">{{ t('ai_note') }}</p>
+</article>
+{% endblock %}

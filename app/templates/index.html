@@ -68,6 +68,9 @@
       <label class="chip chip--{{ tag|lower }}"><input type="radio" name="tag" value="{{ tag }}" {% if filters.tag == tag %}checked{% endif %}><span>{{ tag_label(tag) }}</span></label>
       {% endfor %}
     </fieldset>
+    <label class="search"><span>{{ t('search') }}</span>
+      <input type="search" name="q" value="{{ filters.q or '' }}" placeholder="{{ t('search_placeholder') }}" maxlength="100" autocomplete="off" enterkeyhint="search">
+    </label>
     <div class="filters__row">
       <label class="select"><span>{{ t('filter_source') }}</span>
         <select name="source">
@@ -95,6 +98,12 @@
     </div>
   </form>
 
+  {% if latest_digest %}
+  <a class="digest-teaser" href="{{ url('/digest') }}#d-{{ latest_digest.day }}">
+    <span class="digest-teaser__label">{{ t('digest_latest') }} · {{ latest_digest.day }}</span>
+    <span class="digest-teaser__text">{{ latest_digest.points[0][lang] }}</span>
+  </a>
+  {% endif %}
   <button class="new-items" type="button" hidden></button>
   <p class="feed__ai-note">{{ t('ai_note') }}</p>
 
@@ -102,7 +111,7 @@
     {% for g in data.groups %}{{ card(g) }}{% else %}<p class="cards__empty">{{ t('empty') }}</p>{% endfor %}
   </div>
   {% if data.has_more %}
-  <a class="btn btn--ghost load-more" href="?{{ {'tag': filters.tag or '', 'source': filters.source or '', 'lang': filters.lang or '', 'range': filters.range, 'page': data.page + 1}|urlencode }}#feed" data-page="{{ data.page + 1 }}">{{ t('load_more') }}</a>
+  <a class="btn btn--ghost load-more" href="?{{ {'q': filters.q or '', 'tag': filters.tag or '', 'source': filters.source or '', 'lang': filters.lang or '', 'range': filters.range, 'page': data.page + 1}|urlencode }}#feed" data-page="{{ data.page + 1 }}">{{ t('load_more') }}</a>
   {% endif %}
 </section>
 {% endblock %}

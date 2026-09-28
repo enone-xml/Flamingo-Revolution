@@ -34,3 +34,14 @@ def test_export_is_repeatable(client, tmp_path):  # noqa: F811
     b = export.run(str(tmp_path / "out"))
     assert json.loads((b / "data/version.json").read_text())["content_hash"] == first
     assert not (tmp_path / "out" / ".build").exists()
+
+
+def test_export_writes_story_and_digest_pages(client, tmp_path):  # noqa: F811
+    site = export.run(str(tmp_path / "out2"))
+    stories = list((site / "story").glob("*.html"))
+    assert len(stories) == 1 and (site / "sq" / "story" / stories[0].name).exists()
+    assert 'data-static="1"' in stories[0].read_text()
+    for f in ("digest.html", "sq/digest.html", "digest.xml", "sq/digest.xml"):
+        assert (site / f).exists(), f
+    data = json.loads((site / "data/articles-en.json").read_text())
+    assert any(g["slug"] for g in data["groups"])

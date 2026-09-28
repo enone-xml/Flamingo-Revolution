@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS articles (
 CREATE INDEX IF NOT EXISTS idx_articles_published ON articles(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_title_norm ON articles(title_norm);
 CREATE INDEX IF NOT EXISTS idx_articles_ai_status ON articles(ai_status);
+CREATE INDEX IF NOT EXISTS idx_articles_story_key ON articles(story_key, published_at);
 
 CREATE TABLE IF NOT EXISTS feed_status (
     source        TEXT PRIMARY KEY,
@@ -51,6 +52,12 @@ CREATE TABLE IF NOT EXISTS ai_usage (
     cost_usd      REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ai_usage_month ON ai_usage(month);
+
+CREATE TABLE IF NOT EXISTS digests (
+    day        TEXT PRIMARY KEY,   -- YYYY-MM-DD, Albanian time
+    created_at TEXT NOT NULL,
+    data       TEXT NOT NULL       -- JSON: {"points": [{"en", "sq", "refs": [...]}]}
+);
 
 CREATE TABLE IF NOT EXISTS meta (
     key   TEXT PRIMARY KEY,

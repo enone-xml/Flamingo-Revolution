@@ -21,6 +21,11 @@ def pipeline() -> None:
         pass
     except Exception:
         log.exception("AI run failed")
+    try:
+        from . import digest
+        digest.maybe_make()
+    except Exception:
+        log.exception("digest failed")
     if config.EXPORT_DIR:
         try:
             from . import export

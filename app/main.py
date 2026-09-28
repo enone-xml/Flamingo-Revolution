@@ -7,13 +7,13 @@ from email.utils import format_datetime
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from . import ai, config, db, feed, fetcher, i18n, scheduler
+from . import ai, config, db, digest, feed, fetcher, i18n, scheduler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 for noisy in ("httpx", "httpx2"):
@@ -82,9 +82,10 @@ def lang_url(lang: str, path: str = "/") -> str:
     return path if lang == "en" else "/sq" + path
 
 
-def render(request: Request, name: str, lang: str, page: str, path: str, **ctx):
+def page_context(lang: str, page: str, path: str, static: bool) -> dict:
+    """Everything the base template needs."""
     other = "sq" if lang == "en" else "en"
-    base = {
+    return {
         "lang": lang,
         "page": page,
         "t": lambda key, **kw: i18n.t(lang, key, **kw),
@@ -95,10 +96,14 @@ def render(request: Request, name: str, lang: str, page: str, path: str, **ctx):
         "site_url": config.SITE_URL,
         "path": path,
         "v": ASSET_VERSION,
-        "static": request.headers.get("x-static-export") == "1",
+        "static": static,
         "rss_url": "/feed.xml" if lang == "en" else "/sq/feed.xml",
         "tag_labels": {tag: i18n.tag_label(lang, tag) for tag in ai.TAGS},
     }
+
+
+def render(request: Request, name: str, lang: str, page: str, path: str, **ctx):
+    base = page_context(lang, page, path, request.headers.get("x-static-export") == "1")
     if "ticker" not in ctx:
         with db.session() as conn:
             ctx["ticker"] = feed.latest(conn, lang, 5)
@@ -114,30 +119,34 @@ def clean_filters(tag, source, src_lang, rng):
 
 # ---------------------------------------------------------------- pages
 
-def home(request: Request, lang: str, tag, source, src_lang, rng, page=1):
+def home(request: Request, lang: str, tag, source, src_lang, rng, page=1, q=None):
     tag, source, src_lang, rng = clean_filters(tag, source, src_lang, rng)
+    q = (q or "").strip()[:100] or None
     with db.session() as conn:
-        data = feed.query_groups(conn, lang, tag, source, src_lang, rng, page=page)
+        data = feed.query_groups(conn, lang, tag, source, src_lang, rng, page=page, q=q)
+        latest_digest = next(iter(digest.recent(conn, 1)), None)
         st = feed.stats(conn, len(source_list()))
         ticker = feed.latest(conn, lang, 5)
         sources = feed.source_names(conn)
     return render(
         request, "index.html", lang, "home", "/",
-        data=data, stats=st, ticker=ticker, sources=sources, tags=ai.TAGS,
-        filters={"tag": tag, "source": source, "lang": src_lang, "range": rng},
+        data=data, stats=st, ticker=ticker, sources=sources, tags=ai.TAGS, latest_digest=latest_digest,
+        filters={"tag": tag, "source": source, "lang": src_lang, "range": rng, "q": q},
     )
 
 
 @app.get("/")
 def home_en(request: Request, tag: str | None = None, source: str | None = None,
-            lang: str | None = None, range: str = "7d", page: int = Query(1, ge=1, le=500)):
-    return home(request, "en", tag, source, lang, range, page)
+            lang: str | None = None, range: str = "7d", page: int = Query(1, ge=1, le=500),
+            q: str | None = None):
+    return home(request, "en", tag, source, lang, range, page, q)
 
 
 @app.get("/sq/")
 def home_sq(request: Request, tag: str | None = None, source: str | None = None,
-            lang: str | None = None, range: str = "7d", page: int = Query(1, ge=1, le=500)):
-    return home(request, "sq", tag, source, lang, range, page)
+            lang: str | None = None, range: str = "7d", page: int = Query(1, ge=1, le=500),
+            q: str | None = None):
+    return home(request, "sq", tag, source, lang, range, page, q)
 
 
 @app.get("/sq")
@@ -182,17 +191,101 @@ def sources_sq(request: Request):
     return sources_page(request, "sq")
 
 
+def story_context(g: dict, lang: str) -> dict:
+    lead = g["lead"]
+    return {"story": g, "first": g["articles"][-1], "n": len(g["sources"]),
+            "desc": i18n.t(lang, "seo_desc_story", title=lead["title"][:90], n=len(g["sources"]))}
+
+
+def story_page(request: Request, lang: str, slug: str):
+    with db.session() as conn:
+        g = feed.find_story(conn, lang, slug)
+    if not g:
+        raise HTTPException(status_code=404)
+    return render(request, "story.html", lang, "story", f"/story/{slug}", **story_context(g, lang))
+
+
+@app.get("/story/{slug}")
+def story_en(request: Request, slug: str):
+    return story_page(request, "en", slug)
+
+
+@app.get("/sq/story/{slug}")
+def story_sq(request: Request, slug: str):
+    return story_page(request, "sq", slug)
+
+
+def digest_page(request: Request, lang: str):
+    with db.session() as conn:
+        items = digest.recent(conn, 14)
+    return render(request, "digest.html", lang, "digest", "/digest", digests=items)
+
+
+@app.get("/digest")
+def digest_en(request: Request):
+    return digest_page(request, "en")
+
+
+@app.get("/sq/digest")
+def digest_sq(request: Request):
+    return digest_page(request, "sq")
+
+
+def build_digest_rss(lang: str) -> Response:
+    with db.session() as conn:
+        items = digest.recent(conn, 14)
+    page_url = config.SITE_URL + lang_url(lang, "/digest")
+    self_url = config.SITE_URL + ("/digest.xml" if lang == "en" else "/sq/digest.xml")
+    out = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>',
+        f"<title>{escape(i18n.t(lang, 'site_name') + ' · ' + i18n.t(lang, 'digest_title'))}</title>",
+        f"<link>{escape(page_url)}</link>",
+        f"<description>{escape(i18n.t(lang, 'seo_desc_digest'))}</description>",
+        f"<language>{lang}</language>",
+        f'<atom:link href="{escape(self_url)}" rel="self" type="application/rss+xml"/>',
+    ]
+    for d in items:
+        created = datetime.strptime(d["created_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        body = " ".join(f"• {p[lang]}" for p in d["points"])
+        out.append(
+            "<item>"
+            f"<title>{escape(i18n.t(lang, 'digest_title') + ' · ' + d['day'])}</title>"
+            f"<link>{escape(page_url)}#d-{d['day']}</link>"
+            f'<guid isPermaLink="false">flamingo-watch-digest-{d["day"]}-{lang}</guid>'
+            f"<description>{escape(body)}</description>"
+            f"<pubDate>{format_datetime(created)}</pubDate>"
+            "</item>"
+        )
+    out.append("</channel></rss>")
+    return Response("".join(out), media_type="application/rss+xml; charset=utf-8",
+                    headers={"Cache-Control": "public, max-age=300"})
+
+
+@app.get("/digest.xml")
+def digest_rss_en():
+    return build_digest_rss("en")
+
+
+@app.get("/sq/digest.xml")
+def digest_rss_sq():
+    return build_digest_rss("sq")
+
+
 # ---------------------------------------------------------------- data
 
 @app.get("/api/articles")
 def api_articles(page: int = Query(1, ge=1, le=500), per_page: int = Query(20, ge=1, le=50),
                  ui: str = "en", tag: str | None = None, source: str | None = None,
-                 lang: str | None = None, range: str = "7d", since_id: int | None = None):
-    """Story groups, newest first. `ui` picks the language of titles and summaries."""
+                 lang: str | None = None, range: str = "7d", since_id: int | None = None,
+                 q: str | None = None):
+    """Story groups, newest first. `ui` picks the language of titles and summaries;
+    `q` searches headlines and summaries (accents ignored)."""
     ui = ui if ui in i18n.LANGS else "en"
     tag, source, lang, range = clean_filters(tag, source, lang, range)
+    q = (q or "").strip()[:100] or None
     with db.session() as conn:
-        data = feed.query_groups(conn, ui, tag, source, lang, range, page, per_page, since_id)
+        data = feed.query_groups(conn, ui, tag, source, lang, range, page, per_page, since_id, q=q)
         data["stats"] = feed.stats(conn, len(source_list()))
     return JSONResponse(data, headers={"Cache-Control": "public, max-age=30"})
 
@@ -250,7 +343,7 @@ def robots():
                     media_type="text/plain")
 
 
-SITEMAP_PATHS = ["/", "/about", "/sources"]
+SITEMAP_PATHS = ["/", "/digest", "/about", "/sources"]
 
 
 @app.get("/sitemap.xml")
@@ -270,6 +363,17 @@ def sitemap():
             out.append(f"<url><loc>{escape(config.SITE_URL + lang_url(lang, path))}</loc>"
                        f"<lastmod>{last if path == '/' else last[:10]}</lastmod>"
                        f"<changefreq>{freq}</changefreq>{alts}</url>")
+    with db.session() as conn:
+        stories = feed.story_groups(conn, "en")
+    for g in stories:  # one page per story covered by 2+ outlets
+        path = f"/story/{g['slug']}"
+        alts = "".join(
+            f'<xhtml:link rel="alternate" hreflang="{hl}" href="{escape(config.SITE_URL + lang_url(l, path))}"/>'
+            for hl, l in (("en", "en"), ("sq", "sq"), ("x-default", "en"))
+        )
+        for lang in i18n.LANGS:
+            out.append(f"<url><loc>{escape(config.SITE_URL + lang_url(lang, path))}</loc>"
+                       f"<lastmod>{g['lead']['published_at'][:10]}</lastmod>{alts}</url>")
     out.append("</urlset>")
     return Response("".join(out), media_type="application/xml")
 

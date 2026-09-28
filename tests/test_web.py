@@ -78,7 +78,7 @@ def test_seo_basics(client):
     assert 'application/ld+json' in home and 'og:image' in home
     assert client.get("/sq/").text.count('lang="sq"') >= 1
     sm = client.get("/sitemap.xml")
-    assert sm.status_code == 200 and sm.text.count("<url>") == 6
+    assert sm.status_code == 200 and sm.text.count("<url>") >= 8  # 4 pages x 2 languages (+ story pages)
     assert "Sitemap:" in client.get("/robots.txt").text
     missing = client.get("/no-such-page")
     assert missing.status_code == 404 and "noindex" in missing.text
@@ -98,3 +98,56 @@ def test_same_story_key_days_apart_is_two_groups(client):
 def test_clean_result_without_story_key_does_not_group():
     from app import ai
     assert ai.clean_result({"relevant": False, "story_key": ""})["story_key"] is None
+
+
+def test_story_page_and_search(client):
+    data = client.get("/api/articles").json()
+    story = [g for g in data["groups"] if g["slug"]]
+    assert len(story) == 1 and story[0]["slug"].startswith("zvernec-protest-")
+    slug = story[0]["slug"]
+    for path in (f"/story/{slug}", f"/sq/story/{slug}"):
+        r = client.get(path)
+        assert r.status_code == 200 and "Src0" in r.text and "Src1" in r.text
+    assert client.get("/story/does-not-exist").status_code == 404
+    assert f"/story/{slug}" in client.get("/sitemap.xml").text
+    assert f"/story/{slug}" in client.get("/").text            # link on the card
+    # search ignores accents and case
+    hits = client.get("/api/articles?q=ZVERNEC").json()
+    assert hits["total_groups"] == 1
+    assert client.get("/api/articles?q=nothing-like-this").json()["total_groups"] == 0
+    assert 'name="q"' in client.get("/?q=rama").text
+
+
+def test_single_outlet_story_has_no_page(client):
+    data = client.get("/api/articles").json()
+    single = [g for g in data["groups"] if len(g["sources"]) == 1]
+    assert single and all(g["slug"] is None for g in single)
+
+
+def test_daily_digest(client, monkeypatch):
+    import xml.etree.ElementTree as ET
+    from app import digest
+    monkeypatch.setattr(config, "AI_MODE", "fake")
+    calls = []
+
+    def fake(prompt):
+        calls.append(prompt)
+        return {"points": [{"en": "Protests continue.", "sq": "Protestat vazhdojnë.", "stories": [1, 2]},
+                           {"en": "", "sq": "x", "stories": []}]}, 800, 120
+
+    assert not digest.maybe_make(now_hour=9, caller=fake)          # too early
+    # the fixture has 2 stories today; the digest needs 3
+    assert not digest.maybe_make(now_hour=21, caller=fake) and not calls
+    with db.session() as conn:
+        db.set_meta(conn, "digest_skipped", "")
+        conn.execute("INSERT INTO articles(url, title, title_norm, source, lang, published_at, fetched_at, ai_status, relevant, "
+                     "title_en, title_sq, summary_en, summary_sq, tags, story_key) VALUES('https://ex.al/3', 'Tjetër', 'tjeter', 'Src3', 'sq', "
+                     "strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'), 'done', 1, 'Other', 'Tjetër', "
+                     "'Something happened.', 'Diçka ndodhi.', '[]', 'other-event')")
+    assert digest.maybe_make(now_hour=21, caller=fake)
+    assert not digest.maybe_make(now_hour=22, caller=fake)          # once a day
+    page = client.get("/sq/digest").text
+    assert "Protestat vazhdojnë." in page and "Protests continue." not in page
+    root = ET.fromstring(client.get("/digest.xml").content)
+    assert len(root.findall("./channel/item")) == 1
+    assert "Protests continue." in client.get("/").text              # teaser on the home page
