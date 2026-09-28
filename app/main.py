@@ -43,7 +43,7 @@ ASSET_VERSION = hashlib.sha1(
 
 CSP = (
     "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; "
-    "script-src 'self' 'inline-speculation-rules'; font-src 'self'; connect-src 'self'; "
+    "script-src 'self' 'inline-speculation-rules' https://static.cloudflareinsights.com; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; "
     "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 )
 # Shared by the live app and the static export (_headers), so both send the same.
