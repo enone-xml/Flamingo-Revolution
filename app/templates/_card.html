@@ -4,7 +4,7 @@
   <div class="card__meta">
     <span class="card__source">{{ a.source }}</span>
     <time datetime="{{ a.published_at }}" data-ago>{{ ago(a.published_at) }}</time>
-    {% if g.articles|length > 1 %}<span class="card__count">{{ t('n_sources', n=g.sources|length) }}</span>{% endif %}
+    {% if g.sources|length > 1 %}<span class="card__count">{{ t('n_sources', n=g.sources|length) }}</span>{% endif %}
   </div>
   <h3 class="card__title"><a href="{{ a.url }}" rel="noopener" target="_blank" hreflang="{{ a.lang }}">{{ a.title }}</a></h3>
   {% if a.summary %}<p class="card__summary">{{ a.summary }}</p>{% else %}<p class="card__note">{{ t('no_summary') }}</p>{% endif %}

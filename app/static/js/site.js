@@ -284,7 +284,7 @@
       h("div", { class: "card__meta" },
         h("span", { class: "card__source" }, a.source),
         h("time", { datetime: a.published_at, "data-ago": true }, ago(a.published_at)),
-        g.articles.length > 1 ? h("span", { class: "card__count" }, fmt(I18N.n_sources, { n: count })) : null),
+        count > 1 ? h("span", { class: "card__count" }, fmt(I18N.n_sources, { n: count })) : null),
       h("h3", { class: "card__title" }, h("a", { href: a.url, rel: "noopener", target: "_blank", hreflang: a.lang }, a.title)),
       a.summary ? h("p", { class: "card__summary" }, a.summary) : h("p", { class: "card__note" }, I18N.no_summary),
       a.ai && a.original_title !== a.title
