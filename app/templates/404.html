@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ t('not_found_title') }} · {{ t('site_name') }}{% endblock %}
+{% block robots %}noindex{% endblock %}
+{% block content %}
+<article class="page">
+  <h1 class="page__title" data-split>404</h1>
+  <div class="page__body">
+    <h2>{{ t('not_found_title') }}</h2>
+    <p>{{ t('not_found_text') }}</p>
+    <p><a class="btn btn--pink" href="{{ url('/') }}">{{ t('back_home') }} →</a></p>
+  </div>
+</article>
+{% endblock %}

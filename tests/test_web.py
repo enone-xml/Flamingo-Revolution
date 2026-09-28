@@ -70,3 +70,15 @@ def test_health_flags_stale_fetcher(client):
         from datetime import datetime, timezone
         dbm.set_meta(conn, "last_fetch_at", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     assert client.get("/health").status_code == 200
+
+
+def test_seo_basics(client):
+    home = client.get("/").text
+    assert '<link rel="canonical"' in home and 'hreflang="x-default"' in home
+    assert 'application/ld+json' in home and 'og:image' in home
+    assert client.get("/sq/").text.count('lang="sq"') >= 1
+    sm = client.get("/sitemap.xml")
+    assert sm.status_code == 200 and sm.text.count("<url>") == 6
+    assert "Sitemap:" in client.get("/robots.txt").text
+    missing = client.get("/no-such-page")
+    assert missing.status_code == 404 and "noindex" in missing.text

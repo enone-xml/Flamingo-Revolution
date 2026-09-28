@@ -25,6 +25,7 @@ PAGES = {
     "/feed.xml": "feed.xml",
     "/sq/feed.xml": "sq/feed.xml",
     "/robots.txt": "robots.txt",
+    "/sitemap.xml": "sitemap.xml",
 }
 
 # Security and caching headers, in Cloudflare Pages' _headers format
@@ -42,7 +43,9 @@ HEADERS = """/*
   Content-Type: application/rss+xml; charset=utf-8
 /sq/feed.xml
   Content-Type: application/rss+xml; charset=utf-8
-"""
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+{www_rule}"""
 
 
 def _slim(article: dict) -> dict:
@@ -80,9 +83,15 @@ def run(export_dir: str | None = None) -> Path:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(resp.content)
 
+    # Cloudflare Pages serves 404.html for unknown URLs (with a real 404 status).
+    (build / "404.html").write_bytes(client.get("/this-page-does-not-exist", headers={"X-Static-Export": "1"}).content)
+
     shutil.copytree(Path(main.HERE) / "static", build / "static")
     shutil.copy(Path(main.HERE) / "static" / "favicon.svg", build / "favicon.svg")
-    (build / "_headers").write_text(HEADERS.format(csp=main.CSP))
+    # Only the main domain should appear in search results, not www or *.pages.dev.
+    host = config.SITE_URL.split("://", 1)[-1]
+    www_rule = "" if host.startswith(("localhost", "www.")) else f"https://www.{host}/*\n  X-Robots-Tag: noindex\n"
+    (build / "_headers").write_text(HEADERS.format(csp=main.CSP, www_rule=www_rule))
 
     data_dir = build / "data"
     data_dir.mkdir()

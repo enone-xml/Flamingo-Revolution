@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_card.html" import card with context %}
+{% block title %}{{ t('seo_title_home') }}{% endblock %}
 {% block content %}
 <section class="hero" aria-labelledby="hero-title">
   <canvas class="hero__particles" aria-hidden="true"></canvas>

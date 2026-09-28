@@ -243,7 +243,40 @@ def build_rss(lang: str) -> Response:
 
 @app.get("/robots.txt")
 def robots():
-    return Response("User-agent: *\nAllow: /\n", media_type="text/plain")
+    return Response(f"User-agent: *\nAllow: /\n\nSitemap: {config.SITE_URL}/sitemap.xml\n",
+                    media_type="text/plain")
+
+
+SITEMAP_PATHS = ["/", "/about", "/sources"]
+
+
+@app.get("/sitemap.xml")
+def sitemap():
+    """Every page in both languages, with hreflang alternates for search engines."""
+    with db.session() as conn:
+        last = db.get_meta(conn, "last_fetch_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    out = ['<?xml version="1.0" encoding="UTF-8"?>',
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">']
+    for path in SITEMAP_PATHS:
+        alts = "".join(
+            f'<xhtml:link rel="alternate" hreflang="{hl}" href="{escape(config.SITE_URL + lang_url(l, path))}"/>'
+            for hl, l in (("en", "en"), ("sq", "sq"), ("x-default", "en"))
+        )
+        for lang in i18n.LANGS:
+            freq = "hourly" if path == "/" else "monthly"
+            out.append(f"<url><loc>{escape(config.SITE_URL + lang_url(lang, path))}</loc>"
+                       f"<lastmod>{last if path == '/' else last[:10]}</lastmod>"
+                       f"<changefreq>{freq}</changefreq>{alts}</url>")
+    out.append("</urlset>")
+    return Response("".join(out), media_type="application/xml")
+
+
+@app.exception_handler(404)
+async def not_found(request: Request, exc):
+    lang = "sq" if request.url.path.startswith("/sq") else "en"
+    resp = render(request, "404.html", lang, "404", "/")
+    resp.status_code = 404
+    return resp
 
 
 @app.get("/health")

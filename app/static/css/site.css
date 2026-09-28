@@ -98,9 +98,23 @@ h1, h2, h3 { margin: 0; }
   display: flex; align-items: center; gap: .6rem; color: var(--text); text-decoration: none;
   font: 400 1.35rem/1 var(--display); text-transform: uppercase; letter-spacing: .02em; white-space: nowrap;
 }
-@media (max-width: 380px) { .brand { font-size: 1.1rem; } .menu-btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .menu-btn { padding: .45rem; } }
+.brand { flex: 1 1 auto; min-width: 0; margin-right: .6rem; }
+.brand span { overflow: hidden; text-overflow: clip; }
+/* Small phones: shrink the header so the name never runs into the language switch. */
+@media (max-width: 420px) {
+  .brand { font-size: clamp(1rem, 5vw, 1.35rem); gap: .45rem; }
+  .brand img { height: 26px; }
+  .topbar__right { gap: .45rem; }
+  .lang-switch span { padding: .45rem .55rem; }
+  .menu-btn__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .menu-btn { padding: .4rem; }
+}
+/* Very narrow phones: keep only the flamingo mark; the name stays for screen readers. */
+@media (max-width: 309px) {
+  .brand span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
 .brand img { height: 30px; width: auto; }
-.topbar__right { display: flex; align-items: center; gap: .75rem; }
+.topbar__right { display: flex; flex: none; align-items: center; gap: .75rem; }
 .lang-switch {
   display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden;
   font: 600 .75rem/1 var(--body); letter-spacing: .08em; text-decoration: none;
