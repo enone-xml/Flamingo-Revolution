@@ -12,7 +12,7 @@ FETCH_INTERVAL_MINUTES = int(os.getenv("FETCH_INTERVAL_MINUTES", "10"))
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 AI_MODEL = os.getenv("AI_MODEL", "claude-haiku-4-5-20251001")
 AI_MODE = os.getenv("AI_MODE", "real")  # "real", "fake" or "off"
-AI_MONTHLY_BUDGET_USD = float(os.getenv("AI_MONTHLY_BUDGET_USD", "4"))
+AI_MONTHLY_BUDGET_USD = float(os.getenv("AI_MONTHLY_BUDGET_USD", "5"))
 
 USER_AGENT = f"FlamingoWatchBot/1.0 (+{SITE_URL}/about)"
 
@@ -20,6 +20,8 @@ USER_AGENT = f"FlamingoWatchBot/1.0 (+{SITE_URL}/about)"
 AI_PRICE_INPUT_PER_M = float(os.getenv("AI_PRICE_INPUT_PER_M", "1.0"))
 AI_PRICE_OUTPUT_PER_M = float(os.getenv("AI_PRICE_OUTPUT_PER_M", "5.0"))
 AI_MAX_PER_RUN = int(os.getenv("AI_MAX_PER_RUN", "40"))
+# When AI works again, summarise headline-only articles from this many recent days.
+AI_CATCHUP_DAYS = int(os.getenv("AI_CATCHUP_DAYS", "3"))
 RUN_SCHEDULER = os.getenv("RUN_SCHEDULER", "1") == "1"
 
 # Static-site mode: when EXPORT_DIR is set, every pipeline run also writes a

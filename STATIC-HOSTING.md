@@ -126,7 +126,13 @@ hour. If the pings stop (PC off, Docker stopped, token expired), you get an emai
 ```bash
 docker compose exec web python -m app.ai spend
 ```
-Prints the number of AI calls and the estimated cost against the $4 budget.
+Prints the number of AI calls and the estimated cost against the $5 budget.
+
+**If the AI stops** (credit ran out or the $5 cap was reached), the site keeps working and shows
+original headlines. As soon as AI works again (credit topped up, or the new month starts), it
+also **catches up**: headline-only articles from the last 3 days get their translations,
+summaries, tags and grouping, a few dozen per 10-minute run. Change the window with
+`AI_CATCHUP_DAYS` in `.env`. Set the Console spend limit a little higher than the cap, e.g. $6.
 
 ## 10. Backups
 
@@ -178,9 +184,9 @@ and getting your approval.
 |---|---|
 | Cloudflare Pages hosting + HTTPS | $0 |
 | Domain (.com at Cloudflare, $10.46/yr) | $0.87 |
-| Anthropic API (hard cap in the app) | ≤ $4.00 |
+| Anthropic API (hard cap in the app) | ≤ $5.00 |
 | healthchecks.io | $0 |
-| **Total (worst case)** | **≤ $4.87** |
+| **Total (worst case)** | **≤ $5.87** |
 
 Your PC's electricity isn't counted.
 

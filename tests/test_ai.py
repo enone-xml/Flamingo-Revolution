@@ -121,3 +121,45 @@ def test_other_bad_requests_are_not_account_errors(monkeypatch):
         raise AssertionError("should be a normal, per-article failure")
     except anthropic.BadRequestError:
         pass
+
+
+def test_catch_up_summarises_recent_headline_only_articles(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    path = str(tmp_path / "t.db")
+    fmt = "%Y-%m-%dT%H:%M:%SZ"
+    now = datetime.now(timezone.utc)
+    with db.session(path) as conn:
+        for i, age in enumerate((1, 2, 10)):  # hours, hours, days
+            ts = now - (timedelta(days=age) if age == 10 else timedelta(hours=age))
+            conn.execute(
+                "INSERT INTO articles(url, title, title_norm, source, lang, published_at, fetched_at, ai_status) "
+                "VALUES(?, ?, ?, 'T', 'sq', ?, ?, 'keyword_only')",
+                (f"https://x.al/k{i}", f"Protesta {i}", f"protesta {i}", ts.strftime(fmt), ts.strftime(fmt)),
+            )
+    stats = ai.process_pending(path, backend=ai.FakeBackend())
+    assert stats["caught_up"] == 2                # the 10-day-old one is left alone
+    with db.session(path) as conn:
+        left = conn.execute("SELECT url FROM articles WHERE ai_status='keyword_only'").fetchall()
+        assert [r["url"] for r in left] == ["https://x.al/k2"]
+    # Budget still applies to catch-up.
+    with db.session(path) as conn:
+        conn.execute("UPDATE articles SET ai_status='keyword_only' WHERE url='https://x.al/k0'")
+    monkeypatch.setattr(config, "AI_MONTHLY_BUDGET_USD", 0.0)
+    assert ai.process_pending(path, backend=ai.FakeBackend())["caught_up"] == 0
+
+
+def test_catch_up_failures_keep_headline_and_stop_retrying(tmp_path):
+    class Broken:
+        def call(self, prompt):
+            raise RuntimeError("temporary")
+
+    path = str(tmp_path / "t.db")
+    add_articles(path, 1)
+    with db.session(path) as conn:
+        conn.execute("UPDATE articles SET ai_status='keyword_only', published_at=strftime('%Y-%m-%dT%H:%M:%SZ','now')")
+    for _ in range(4):
+        ai.process_pending(path, backend=Broken())
+    with db.session(path) as conn:
+        row = conn.execute("SELECT ai_status, ai_attempts FROM articles").fetchone()
+    assert (row["ai_status"], row["ai_attempts"]) == ("keyword_only", 3)

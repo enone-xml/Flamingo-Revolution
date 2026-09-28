@@ -181,8 +181,21 @@ def _mark_keyword_only(conn, reason: str) -> int:
     return n
 
 
+def _catchup_rows(conn, limit: int):
+    """Headline-only articles from the last few days that never got AI (e.g. the
+    credit ran out). Summarised from their headline once AI works again."""
+    if limit <= 0 or config.AI_CATCHUP_DAYS <= 0:
+        return []
+    since = (datetime.now(timezone.utc) - timedelta(days=config.AI_CATCHUP_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return conn.execute(
+        "SELECT * FROM articles WHERE ai_status = 'keyword_only' AND ai_attempts < 3 "
+        "AND published_at >= ? ORDER BY published_at DESC LIMIT ?",
+        (since, limit),
+    ).fetchall()
+
+
 def process_pending(db_path: str | None = None, backend=None, limit: int | None = None) -> dict:
-    stats = {"done": 0, "failed": 0, "keyword_only": 0}
+    stats = {"done": 0, "failed": 0, "keyword_only": 0, "caught_up": 0}
     backend = backend or get_backend()
     limit = limit or config.AI_MAX_PER_RUN
     with db.session(db_path) as conn:
@@ -197,7 +210,10 @@ def process_pending(db_path: str | None = None, backend=None, limit: int | None 
             "SELECT * FROM articles WHERE ai_status = 'pending' ORDER BY published_at DESC LIMIT ?",
             (limit,),
         ).fetchall()
-        for art in rows:
+        # New articles first; spare capacity goes to catching up on headline-only ones.
+        queue = [(art, False) for art in rows]
+        queue += [(art, True) for art in _catchup_rows(conn, limit - len(rows))]
+        for art, catchup in queue:
             # Budget guard: stop before a call that would take us over the limit.
             spent = month_spend(conn)
             if spent + cost_of(700, 250) > config.AI_MONTHLY_BUDGET_USD:
@@ -216,7 +232,8 @@ def process_pending(db_path: str | None = None, backend=None, limit: int | None 
                 break
             except Exception as exc:
                 attempts = art["ai_attempts"] + 1
-                status = "failed" if attempts >= 3 else "pending"
+                # A catch-up article keeps showing its headline; it just stops being retried.
+                status = art["ai_status"] if catchup else ("failed" if attempts >= 3 else "pending")
                 conn.execute(
                     "UPDATE articles SET ai_attempts = ?, ai_status = ? WHERE id = ?",
                     (attempts, status, art["id"]),
@@ -241,7 +258,7 @@ def process_pending(db_path: str | None = None, backend=None, limit: int | None 
                 (now.isoformat(), month_now(), art["id"], tin, tout, cost_of(tin, tout)),
             )
             conn.commit()
-            stats["done"] += 1
+            stats["caught_up" if catchup else "done"] += 1
         # Articles that failed 3 times still appear, with their original headline.
         conn.execute("UPDATE articles SET snippet = NULL WHERE ai_status = 'failed'")
     log.info("AI run: %s", stats)

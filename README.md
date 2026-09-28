@@ -47,12 +47,12 @@ This prints something like:
 Month:          2026-09
 AI mode:        real (claude-haiku-4-5-20251001)
 AI calls:       412
-Estimated cost: $0.8123 of $4.00 budget
+Estimated cost: $0.8123 of $5.00 budget
 Budget reached: no
 Waiting for AI: 0 articles
 ```
 
-When the estimate reaches `AI_MONTHLY_BUDGET_USD` ($4 by default), AI calls
+When the estimate reaches `AI_MONTHLY_BUDGET_USD` ($5 by default), AI calls
 stop until the 1st of next month. New articles still appear, with their original
 headline and no summary. Also set a monthly limit in the Anthropic Console as
 a second safety net (see DEPLOY.md, step 5).
