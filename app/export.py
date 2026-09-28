@@ -84,6 +84,9 @@ def _code_hash() -> str:
     for f in sorted(p for p in here.rglob("*") if p.is_file() and "__pycache__" not in p.parts):
         h.update(f.relative_to(here).as_posix().encode())
         h.update(f.read_bytes())
+    for f in (config.TIMELINE_FILE, config.SOURCES_FILE):  # hand-edited content outside app/
+        if Path(f).exists():
+            h.update(Path(f).read_bytes())
     return h.hexdigest()[:12]
 
 
