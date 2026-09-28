@@ -42,7 +42,19 @@
     return el;
   }
 
+  function refreshProtestDay() {
+    const el = $(".hero__day");
+    if (!el) return;
+    const start = el.dataset.protestStart;
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Tirane" }));
+    const first = new Date(start + "T00:00:00");
+    const n = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - first) / 864e5) + 1;
+    const label = $(".hero__day-n", el);
+    if (n >= 1 && label) label.textContent = label.dataset.dayText.replace("{n}", n);
+  }
+
   function refreshTimes(root = document) {
+    refreshProtestDay();
     $$("time[data-ago]", root).forEach((t) => { t.textContent = ago(t.getAttribute("datetime")); });
     $$("[data-updated]", root).forEach((el) => { el.textContent = ago(el.dataset.updated); });
   }

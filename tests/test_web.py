@@ -165,3 +165,24 @@ def test_timeline(client, monkeypatch, tmp_path):
     r = client.get("/timeline")
     assert "First protest." in r.text and "/story/zvernec-protest-" in r.text
     assert "/timeline" in client.get("/sitemap.xml").text
+
+
+def test_protest_day_counter(client, monkeypatch):
+    from app import feed as feedmod
+    # checked against news reports: day 80 on 18 Aug, day 100 on 7 Sep, day 121 on 28 Sep 2026
+    from datetime import date
+    for d, n in ((date(2026, 8, 18), 80), (date(2026, 9, 7), 100), (date(2026, 9, 28), 121)):
+        assert (d - date(2026, 5, 31)).days + 1 == n
+    n = feedmod.protest_day()
+    assert n and n >= 121
+    assert f"Day {n}" in client.get("/").text and f"Dita {n}" in client.get("/sq/").text
+    monkeypatch.setattr(config, "PROTEST_START", "")
+    assert "hero__day" not in client.get("/").text
+
+
+def test_status_page(client):
+    r = client.get("/sq/status")
+    assert r.status_code == 200 and "Gjendja" in r.text and "noindex" in r.text
+    assert "ABC News Albania" in r.text                 # every configured source is listed
+    assert "$" not in r.text.split("<main")[1].split("</main>")[0]   # no money figures
+    assert "/status" not in client.get("/sitemap.xml").text

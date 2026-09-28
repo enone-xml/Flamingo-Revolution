@@ -132,6 +132,7 @@ def home(request: Request, lang: str, tag, source, src_lang, rng, page=1, q=None
     return render(
         request, "index.html", lang, "home", "/",
         data=data, stats=st, ticker=ticker, sources=sources, tags=ai.TAGS, latest_digest=latest_digest,
+        protest_day=feed.protest_day(), protest_start=config.PROTEST_START,
         filters={"tag": tag, "source": source, "lang": src_lang, "range": rng, "q": q},
     )
 
@@ -214,6 +215,58 @@ def story_en(request: Request, slug: str):
 @app.get("/sq/story/{slug}")
 def story_sq(request: Request, slug: str):
     return story_page(request, "sq", slug)
+
+
+def status_context(conn) -> dict:
+    """Everything the public status page shows. No money figures, just states."""
+    now = datetime.now(timezone.utc)
+    rows = {r["source"]: r for r in conn.execute("SELECT * FROM feed_status").fetchall()}
+    feeds = []
+    for s in source_list():
+        r = rows.get(s["name"])
+        state = "waiting"
+        if r and r["last_ok_at"] and (not r["last_error_at"] or r["last_ok_at"] >= r["last_error_at"]):
+            state = "ok"
+        elif r and r["last_error_at"]:
+            state = "err"
+        feeds.append({"name": s["name"], "state": state, "last_ok": r["last_ok_at"] if r else None,
+                      "every": int(s.get("every") or config.FETCH_INTERVAL_MINUTES)})
+    skip = db.get_meta(conn, "gdelt_skip_until") or ""
+    paused = db.get_meta(conn, "ai_paused_until") or ""
+    if config.AI_MODE == "off" or (config.AI_MODE == "real" and not config.ANTHROPIC_API_KEY):
+        ai_state = "off"
+    elif paused > now.isoformat():
+        ai_state = "paused"
+    elif db.get_meta(conn, "ai_budget_hit") == ai.month_now():
+        ai_state = "budget"
+    else:
+        ai_state = "on"
+    last_digest = next(iter(digest.recent(conn, 1)), None)
+    return {
+        "st": feed.stats(conn, len(source_list())),
+        "feeds": feeds, "ok_count": sum(1 for f in feeds if f["state"] == "ok"),
+        "search_paused": skip > now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "ai_state": ai_state,
+        "last_digest": last_digest["day"] if last_digest else None,
+        "generated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "interval": config.FETCH_INTERVAL_MINUTES,
+    }
+
+
+def status_page(request: Request, lang: str):
+    with db.session() as conn:
+        ctx = status_context(conn)
+    return render(request, "status.html", lang, "status", "/status", **ctx)
+
+
+@app.get("/status")
+def status_en(request: Request):
+    return status_page(request, "en")
+
+
+@app.get("/sq/status")
+def status_sq(request: Request):
+    return status_page(request, "sq")
 
 
 def load_milestones() -> list[dict]:

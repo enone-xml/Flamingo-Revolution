@@ -26,6 +26,8 @@ PAGES = {
     "/sq/feed.xml": "sq/feed.xml",
     "/robots.txt": "robots.txt",
     "/sitemap.xml": "sitemap.xml",
+    "/status": "status.html",
+    "/sq/status": "sq/status.html",
     "/timeline": "timeline.html",
     "/sq/timeline": "sq/timeline.html",
     "/digest": "digest.html",

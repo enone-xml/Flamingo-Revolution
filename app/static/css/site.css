@@ -453,6 +453,33 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 .digest__refs a { color: var(--muted); }
 .digest__refs a:hover { color: var(--pink); }
 
+/* ---------------------------------------------------------------- protest day + status */
+.hero__day {
+  display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .5rem; width: fit-content; max-width: 100%;
+  margin: 0 0 1rem; padding: .45rem .9rem; border: 1px solid var(--pink); border-radius: 999px;
+  background: rgba(10, 10, 10, .75); font: 600 .78rem/1.3 var(--body); letter-spacing: .08em; text-transform: uppercase;
+  position: relative; z-index: 2;
+}
+.hero__day .live-dot { align-self: center; }
+.hero__day-n { color: var(--pink); font: 400 1.25rem/1 var(--display); letter-spacing: .02em; }
+.hero__day a { color: var(--muted); text-decoration: none; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.hero__day a:hover { color: var(--pink); }
+.status__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0; margin: 1.5rem 0 2rem; border: 1px solid var(--line); }
+.status__grid > div { padding: .8rem 1rem; border-bottom: 1px solid var(--line); }
+.status__grid dt { color: var(--muted); font: 600 .7rem/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; }
+.status__grid dd { margin: .25rem 0 0; font-weight: 600; }
+.status__ai--on { color: var(--green); }
+.status__ai--paused, .status__ai--budget, .status__ai--off { color: var(--pink); }
+.status__table-wrap { overflow-x: auto; }
+.status__table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.status__table th, .status__table td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.status__table thead th { color: var(--muted); font: 600 .7rem/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; }
+.status__every { display: block; color: var(--muted); font-size: .75rem; font-weight: 400; }
+.status__pill { display: inline-block; padding: .2rem .6rem; border-radius: 999px; border: 1px solid var(--line); font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.status__pill--ok { color: var(--green); border-color: rgba(39, 245, 138, .45); }
+.status__pill--err { color: var(--pink); border-color: var(--pink-dim); }
+.status__pill--waiting { color: var(--muted); }
+
 /* ---------------------------------------------------------------- timeline */
 .timeline__intro { color: var(--muted); max-width: 62ch; margin: 0 0 2rem; }
 .timeline__month { margin-bottom: 2rem; }

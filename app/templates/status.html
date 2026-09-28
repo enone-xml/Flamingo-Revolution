@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ t('status_title') }} · {{ t('site_name') }}{% endblock %}
+{% block description %}{{ t('seo_desc_status') }}{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+{% block content %}
+<article class="page status">
+  <h1 class="page__title" data-split>{{ t('status_title') }}</h1>
+  <div class="page__body">
+    <p>{{ t('status_intro', m=interval) }}</p>
+    <dl class="status__grid">
+      <div><dt>{{ t('status_updated') }}</dt><dd><time datetime="{{ st.last_updated or '' }}" data-ago>{{ ago(st.last_updated) }}</time></dd></div>
+      <div><dt>{{ t('status_published') }}</dt><dd><time datetime="{{ generated }}" data-ago>{{ ago(generated) }}</time></dd></div>
+      <div><dt>{{ t('status_articles_today') }}</dt><dd>{{ st.articles_today }}</dd></div>
+      <div><dt>{{ t('status_sources') }}</dt><dd>{{ t('status_healthy', ok=ok_count, n=feeds|length) }}</dd></div>
+      <div><dt>{{ t('status_ai') }}</dt><dd class="status__ai status__ai--{{ ai_state }}">{{ t('status_ai_' ~ ai_state) }}</dd></div>
+      <div><dt>{{ t('status_digest') }}</dt><dd>{% if last_digest %}<a href="{{ url('/digest') }}#d-{{ last_digest }}">{{ last_digest }}</a>{% else %}{{ t('status_none') }}{% endif %}</dd></div>
+      <div><dt>{{ t('status_search') }}</dt><dd>{% if search_paused %}{{ t('status_search_paused') }}{% else %}{{ t('status_ok') }}{% endif %}</dd></div>
+    </dl>
+    <h2>{{ t('status_sources') }}</h2>
+    <div class="status__table-wrap">
+      <table class="status__table">
+        <thead><tr><th scope="col">{{ t('status_source') }}</th><th scope="col">{{ t('status_last_ok') }}</th><th scope="col">{{ t('status_state') }}</th></tr></thead>
+        <tbody>
+          {% for f in feeds %}
+          <tr>
+            <th scope="row">{{ f.name }}<span class="status__every">{{ t('status_every', m=f.every) }}</span></th>
+            <td>{% if f.last_ok %}<time datetime="{{ f.last_ok }}" data-ago>{{ ago(f.last_ok) }}</time>{% else %}–{% endif %}</td>
+            <td><span class="status__pill status__pill--{{ f.state }}">{{ t('status_' ~ ('ok' if f.state == 'ok' else 'err' if f.state == 'err' else 'waiting')) }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</article>
+{% endblock %}

@@ -5,6 +5,14 @@
 <section class="hero" aria-labelledby="hero-title">
   <canvas class="hero__particles" aria-hidden="true"></canvas>
   <p class="hero__coords" aria-hidden="true">40.52°N 19.42°E <span>//</span> Nartë · Zvërnec · Sazan</p>
+  {% if protest_day %}
+  <p class="hero__day" data-protest-start="{{ protest_start }}">
+    <span class="live-dot" aria-hidden="true"></span>
+    <strong class="hero__day-n" data-day-text="{{ t('protest_day') }}">{{ t('protest_day', n=protest_day) }}</strong>
+    <span>{{ t('protest_day_label') }}</span>
+    <a href="{{ url('/timeline') }}">{{ t('protest_day_since') }}</a>
+  </p>
+  {% endif %}
   <h1 class="hero__title" id="hero-title">
     <span class="hero__line"><span class="hero__word" data-split>{{ t('hero_line1') }}</span></span>
     <span class="hero__line hero__line--pink"><span class="hero__word" data-split>{{ t('hero_line2') }}</span></span>

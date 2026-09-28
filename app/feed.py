@@ -218,3 +218,14 @@ def timeline(conn, lang: str, milestones: list[dict]) -> list[dict]:
             months.append({"key": key, "label": f"{MONTHS[lang][int(mo) - 1]} {y}", "events": []})
         months[-1]["events"].append(e)
     return months
+
+
+def protest_day(start: str | None = None) -> int | None:
+    """Day number of the daily protests today (Albanian date); day 1 = start date."""
+    from . import config
+    start = config.PROTEST_START if start is None else start
+    if not start:
+        return None
+    first = datetime.strptime(start, "%Y-%m-%d").date()
+    n = (datetime.now(TIRANA).date() - first).days + 1
+    return n if n >= 1 else None

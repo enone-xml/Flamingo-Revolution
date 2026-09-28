@@ -24,6 +24,10 @@ AI_MAX_PER_RUN = int(os.getenv("AI_MAX_PER_RUN", "40"))
 # When AI works again, summarise headline-only articles from this many recent days.
 AI_CATCHUP_DAYS = int(os.getenv("AI_CATCHUP_DAYS", "3"))
 RUN_SCHEDULER = os.getenv("RUN_SCHEDULER", "1") == "1"
+# Protest day counter in the hero. 31 May 2026 = start of the daily protests in Tirana
+# (Wikipedia); checked against reported day 80 (18 Aug), day 100 (7 Sep), day 121 (28 Sep).
+# Set PROTEST_START empty to hide the counter.
+PROTEST_START = os.getenv("PROTEST_START", "2026-05-31")
 
 # Static-site mode: when EXPORT_DIR is set, every pipeline run also writes a
 # complete static copy of the site there, for publishing to free static hosting.
