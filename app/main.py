@@ -34,7 +34,7 @@ app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
 templates = Jinja2Templates(directory=HERE / "templates")
 # Changes whenever CSS/JS change, so browsers never use a stale cached copy.
 ASSET_VERSION = hashlib.sha1(
-    b"".join((HERE / "static" / f).read_bytes() for f in ("css/site.css", "js/site.js"))
+    b"".join(p.read_bytes() for p in sorted((HERE / "static").rglob("*")) if p.is_file())
 ).hexdigest()[:10]
 
 CSP = (
@@ -51,7 +51,8 @@ async def headers(request: Request, call_next):
     resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     resp.headers["Permissions-Policy"] = "interest-cohort=(), geolocation=(), camera=(), microphone=()"
     if request.url.path.startswith("/static/"):
-        resp.headers["Cache-Control"] = "public, max-age=604800"
+        # Every static URL carries ?v=<hash of the files>, so it can be cached for a year.
+        resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     return resp
 
 

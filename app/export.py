@@ -36,7 +36,7 @@ HEADERS = """/*
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: interest-cohort=(), geolocation=(), camera=(), microphone=()
 /static/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=31536000, immutable
 /data/*
   Cache-Control: no-cache
 /feed.xml

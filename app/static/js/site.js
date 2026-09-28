@@ -49,7 +49,7 @@
 
   // ------------------------------------------------------------ smooth scroll
   let lenis = null;
-  if (motion && typeof window.Lenis !== "undefined") {
+  if (motion && finePointer && typeof window.Lenis !== "undefined") {
     lenis = new Lenis({ lerp: 0.12, smoothWheel: true });
     lenis.on("scroll", ScrollTrigger.update);
     gsap.ticker.add((time) => lenis.raf(time * 1000));
@@ -170,7 +170,7 @@
     tl.to(paths, { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut", stagger: 0.18 }, 0.4);
 
     // Parallax on scroll: title drifts up, bird drifts down.
-    if ($(".hero")) {
+    if ($(".hero") && window.innerWidth >= 960) {
       gsap.to(".hero__title", { yPercent: -18, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
       gsap.to(".hero__bird-draw", { yPercent: 12, rotate: -4, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
     }
@@ -193,7 +193,14 @@
         onComplete: () => els.forEach((e) => { e.classList.remove("pre-reveal"); e.style.transform = ""; }),
       }),
     });
-    ScrollTrigger.refresh();
+    scheduleRefresh();
+  }
+
+  let refreshQueued = false;
+  function scheduleRefresh() {
+    if (refreshQueued) return;
+    refreshQueued = true;
+    requestAnimationFrame(() => { refreshQueued = false; ScrollTrigger.refresh(); });
   }
 
   // ------------------------------------------------------------ particles (desktop only)
@@ -403,7 +410,7 @@
     $("span", btn).textContent = open ? I18N.show_sources : I18N.hide_sources;
     list.hidden = open;
     if (!open && motion) gsap.from($$("li", list), { opacity: 0, x: -12, duration: 0.4, stagger: 0.04, ease: "power2.out" });
-    if (lenis) ScrollTrigger.refresh();
+    if (motion) scheduleRefresh();
   });
 
   // Filters apply instantly; the URL is kept in sync so it can be shared.

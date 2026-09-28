@@ -23,7 +23,10 @@ def article_dict(row, lang: str) -> dict:
     """One article, with title/summary in the reader's language when we have it."""
     has_ai = row["ai_status"] == "done"
     title = (row["title_sq"] if lang == "sq" else row["title_en"]) if has_ai else None
-    summary = (row["summary_sq"] if lang == "sq" else row["summary_en"]) if has_ai else None
+    summary = None
+    if has_ai:  # prefer the reader's language, else the other one rather than nothing
+        first, second = ("summary_sq", "summary_en") if lang == "sq" else ("summary_en", "summary_sq")
+        summary = row[first] or row[second] or None
     return {
         "id": row["id"],
         "url": row["url"],

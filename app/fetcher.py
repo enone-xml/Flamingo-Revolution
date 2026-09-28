@@ -270,6 +270,11 @@ def run_once(db_path: str | None = None, sources_path: str | None = None) -> int
                     log.exception("unexpected error in %s", src.get("name"))
                     _record_error(conn, src.get("name", "?"), src.get("url", ""), repr(exc))
                 conn.commit()
+            # GDELT rate-limits hard, so each run makes one search, taking turns.
+            if searches:
+                turn = int(db.get_meta(conn, "gdelt_turn", "0") or 0)
+                db.set_meta(conn, "gdelt_turn", str(turn + 1))
+                searches = [searches[turn % len(searches)]]
             for search in searches:
                 try:
                     total += fetch_search(conn, client, search)

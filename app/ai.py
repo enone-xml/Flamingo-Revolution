@@ -40,7 +40,7 @@ SYSTEM = """You process news items for Flamingo Watch, a neutral news aggregator
 Return JSON:
 - relevant: true only if about the Flamingo Revolution protests, the Zvërnec/Sazan/Vjosa-Narta resort, or Edi Rama's government (its actions, officials, policies, scandals, or reactions to it). Otherwise false.
 - title_en, title_sq: faithful English and Albanian versions of the headline; use an empty string for the one in the headline's own language (we show the original).
-- summary_en, summary_sq: 1-2 short sentences (max 40 words) restating ONLY what the headline and teaser say. No added facts, background, guesses or judgements; attribute claims ("X says...").
+- summary_en, summary_sq: always BOTH, 1-2 short sentences each (max 40 words) restating ONLY what the headline and teaser say. No added facts, background, guesses or judgements; attribute claims ("X says...").
 - tags: 1-3 from the allowed list.
 - story_key: 3-6 word lowercase hyphenated slug for the specific event; reuse a recent key if it's the same event.
 If relevant is false: return empty strings for the titles, summaries and story_key, and tags ["other"]."""

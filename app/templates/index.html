@@ -18,7 +18,7 @@
     <div class="hero__stats-wide"><dt>{{ t('updated') }}</dt><dd class="hero__updated" data-updated="{{ stats.last_updated or '' }}">{{ ago(stats.last_updated) }}</dd></div>
   </dl>
 
-  <img class="hero__bird" src="/static/img/flamingo.svg" alt="" width="360" height="600" aria-hidden="true">
+  <img class="hero__bird" src="/static/img/flamingo.svg?v={{ v }}" alt="" width="360" height="600" aria-hidden="true">
   <svg class="hero__bird-draw" viewBox="0 0 120 200" aria-hidden="true" focusable="false">
     <g fill="none" stroke="#FF3EA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M40 92C30 70 62 58 84 70c16 8 20 26 2 34-16 8-38 4-46-12z"/>
@@ -60,7 +60,7 @@
     <p class="feed__updated">{{ t('updated') }} <span class="js-updated" data-updated="{{ stats.last_updated or '' }}">{{ ago(stats.last_updated) }}</span></p>
   </div>
 
-  <form class="filters" method="get" action="{{ url('/') }}#feed" aria-label="Filters">
+  <form class="filters" method="get" action="{{ url('/') }}#feed" aria-label="{{ t('filters') }}">
     <fieldset class="filters__tags">
       <legend>{{ t('filter_tag') }}</legend>
       <label class="chip"><input type="radio" name="tag" value="" {% if not filters.tag %}checked{% endif %}><span>{{ t('all') }}</span></label>

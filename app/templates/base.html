@@ -14,12 +14,11 @@
   <link rel="alternate" hreflang="x-default" href="{{ site_url }}{{ path }}">
   <meta name="theme-color" content="#0A0A0A">
   <meta name="color-scheme" content="dark">
-  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+  <link rel="icon" href="/static/favicon.svg?v={{ v }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png?v={{ v }}">
   <link rel="alternate" type="application/rss+xml" title="{{ t('site_name') }}" href="{{ rss_url }}">
   <link rel="preload" href="/static/fonts/Anton-400-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/IBMPlexSans-400-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/static/css/fonts.css">
   <link rel="stylesheet" href="/static/css/site.css?v={{ v }}">
   <meta property="og:site_name" content="{{ t('site_name') }}">
   <meta property="og:title" content="{{ self.title()|striptags }}">
@@ -68,7 +67,7 @@
 
   <header class="topbar">
     <a class="brand" href="{{ url('/') }}">
-      <img src="/static/img/flamingo.svg" alt="" width="22" height="37">
+      <img src="/static/img/flamingo.svg?v={{ v }}" alt="" width="22" height="37">
       <span>{{ t('site_name') }}</span>
     </a>
     <div class="topbar__right">
@@ -100,7 +99,7 @@
   </main>
 
   <footer class="footer">
-    <img src="/static/img/flamingo.svg" alt="" width="30" height="50">
+    <img src="/static/img/flamingo.svg?v={{ v }}" alt="" width="30" height="50">
     <p>{{ t('footer_note') }}</p>
     <p class="footer__links">
       <a href="{{ url('/about') }}">{{ t('nav_about') }}</a>
@@ -122,9 +121,9 @@
     'no_summary': t('no_summary'), 'new_items': t('new_items'), 'empty': t('empty'),
     'updated_never': t('updated_never'), 'tags': tag_labels|default({})
   }|tojson }}</script>
-  <script src="/static/js/vendor/gsap.min.js" defer></script>
-  <script src="/static/js/vendor/ScrollTrigger.min.js" defer></script>
-  <script src="/static/js/vendor/lenis.min.js" defer></script>
+  <script src="/static/js/vendor/gsap.min.js?v={{ v }}" defer></script>
+  <script src="/static/js/vendor/ScrollTrigger.min.js?v={{ v }}" defer></script>
+  <script src="/static/js/vendor/lenis.min.js?v={{ v }}" defer></script>
   <script src="/static/js/site.js?v={{ v }}" defer></script>
 </body>
 </html>
