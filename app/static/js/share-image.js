@@ -5,7 +5,7 @@
   "use strict";
 
   const W = 1080, H = 1920, PAD = 84;
-  const C = { bg: "#0A0A0A", card: "#141414", line: "#2A2A2A", pink: "#FF3EA5", green: "#27F58A", text: "#F5F5F0", muted: "#9A9A94", soft: "#D8D8D2" };
+  const C = { bg: "#0A0A0A", card: "#141414", line: "#2A2A2A", pink: "#FF3EA5", green: "#27F58A", blue: "#3EA5FF", text: "#F5F5F0", muted: "#9A9A94", soft: "#D8D8D2" };
   // Same drawing as the site's flamingo logo (viewBox 120x200).
   const BIRD = [
     "M40 92C30 70 62 58 84 70c16 8 20 26 2 34-16 8-38 4-46-12z",
@@ -82,11 +82,29 @@
     ctx.fillText("FLAMINGO-WATCH.COM", PAD, 62);
     ctx.fillStyle = C.green; ctx.fillText("✦", PAD + 520, 62);
     ctx.restore();
-    if (url) {
-      ctx.fillStyle = C.muted; ctx.font = "400 26px 'IBM Plex Sans', sans-serif";
-      const short = url.replace(/^https?:\/\//, "");
-      ctx.fillText(short.length > 58 ? short.slice(0, 57) + "…" : short, PAD, H - 196);
-    }
+    if (url) linkSticker(ctx, url.replace(/^https?:\/\//, ""), H - 262);
+  }
+
+  // Looks like Instagram's link sticker, so people know where to tap. The real,
+  // tappable sticker is added in Instagram (the link is already on the clipboard).
+  function linkSticker(ctx, short, y) {
+    ctx.font = "600 30px 'IBM Plex Sans', sans-serif";
+    if (short.length > 44) short = short.slice(0, 43) + "…";
+    const w = Math.min(W - PAD * 2, ctx.measureText(short).width + 110), h = 68;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath(); ctx.roundRect(PAD, y, w, h, 16); ctx.fill();
+    ctx.restore();
+    // chain-link icon
+    ctx.save();
+    ctx.strokeStyle = C.pink; ctx.lineWidth = 5; ctx.lineCap = "round";
+    ctx.translate(PAD + 42, y + h / 2); ctx.rotate(-Math.PI / 4);
+    ctx.beginPath(); ctx.roundRect(-20, -8, 22, 16, 8); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-2, -8, 22, 16, 8); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = "#0A0A0A";
+    ctx.fillText(short, PAD + 78, y + 45);
   }
 
   function drawStory(ctx, d) {
@@ -102,7 +120,7 @@
     }
     if (d.sources) {
       ctx.fillStyle = C.pink; ctx.font = "600 32px 'IBM Plex Sans', sans-serif";
-      text(ctx, wrap(ctx, d.sources.toUpperCase(), W - PAD * 2, 2), PAD, Math.min(y + 10, H - 330), 42);
+      text(ctx, wrap(ctx, d.sources.toUpperCase(), W - PAD * 2, 2), PAD, Math.min(y + 10, H - 380), 42);
     }
     footer(ctx, d.url);
   }
@@ -114,7 +132,7 @@
     ctx.fillStyle = C.pink; ctx.font = "400 104px Anton, Impact, sans-serif";
     y = text(ctx, wrap(ctx, d.title.toUpperCase(), W - PAD * 2, 2), PAD, y + 40, 108) + 50;
     const points = d.points.slice(0, 5);
-    const bottom = H - 250;  // keep clear of the link line and the pink tape
+    const bottom = H - 290;  // keep clear of the link sticker and the pink tape
     // Pick the largest text size at which every point fits above the footer.
     let size = 30;
     for (const s of [44, 40, 36, 33, 30]) {
@@ -149,17 +167,17 @@
     ctx.fillText(d.title, PAD, 470);
     const colW = (W - PAD * 2 - 40) / 2, cellH = colW * 380 / 300;
     d.sides.forEach((s, i) => {
-      const x = PAD + i * (colW + 40), color = s.side === "berisha" ? C.green : C.pink;
+      const x = PAD + i * (colW + 40), color = s.side === "berisha" ? C.blue : C.pink;
       ctx.drawImage(imgs[i], x, 540, colW, cellH);
       ctx.fillStyle = color; ctx.font = "400 110px Anton, Impact, sans-serif";
       ctx.fillText(s.sign, x, 540 + cellH + 130);
       ctx.fillStyle = C.muted; ctx.font = "600 30px 'IBM Plex Sans', sans-serif";
       ctx.fillText(s.name.toUpperCase(), x, 540 + cellH + 180);
       ctx.fillStyle = color; ctx.font = "400 190px Anton, Impact, sans-serif";
-      ctx.fillText(String(s.total), x, 540 + cellH + 380);
+      ctx.fillText(String(s.total), x, 540 + cellH + 345);
     });
-    ctx.fillStyle = C.soft; ctx.font = "400 32px 'IBM Plex Sans', sans-serif";
-    text(ctx, wrap(ctx, d.summary || "", W - PAD * 2, 2), PAD, H - 300, 42);
+    ctx.fillStyle = C.soft; ctx.font = "400 34px 'IBM Plex Sans', sans-serif";
+    text(ctx, wrap(ctx, d.summary || "", W - PAD * 2, 3), PAD, H - 390, 46);
     footer(ctx, d.url);
   }
 

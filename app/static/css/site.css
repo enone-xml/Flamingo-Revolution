@@ -41,6 +41,7 @@
   --pink: #FF3EA5;
   --pink-dim: #B82D77;
   --green: #27F58A;
+  --blue: #3EA5FF;   /* Berisha's side on the RnBBnB Meter: pink's mirror image */
   --text: #F5F5F0;
   --muted: #9A9A94;
   --display: "Anton", "Impact", "Arial Narrow", sans-serif;
@@ -579,11 +580,11 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 .rnb__side { padding: clamp(.75rem, 3vw, 2rem); min-width: 0; }
 .rnb__side + .rnb__side { border-left: 1px solid var(--line); }
 .rnb__sign { margin: 0 0 .5rem; font: 400 clamp(2.6rem, 11vw, 6rem)/.9 var(--display); color: var(--pink); letter-spacing: .02em; }
-.rnb__side--berisha .rnb__sign { color: var(--green); }
+.rnb__side--berisha .rnb__sign { color: var(--blue); }
 .rnb__name { display: block; margin-top: .35rem; font: 600 .8rem/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .rnb__cell { display: block; width: 100%; max-width: 340px; height: auto; margin: .5rem auto 1rem; overflow: visible; }
 .rnb__side--rama { --accent: var(--pink); }
-.rnb__side--berisha { --accent: var(--green); }
+.rnb__side--berisha { --accent: var(--blue); }
 .sec { display: none; }
 .sec.on { display: inline; }
 .rnb__count { margin: 0; display: flex; flex-direction: column; }
