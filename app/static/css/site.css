@@ -574,6 +574,7 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 
 /* ---------------------------------------------------------------- RnB / BnB */
 .rnb__satire { display: inline-block; margin: 0 0 2rem; padding: .35rem .7rem; border: 1px dashed var(--pink-dim); color: var(--muted); font-size: .85rem; }
+.rnb__share { display: flex; flex-wrap: wrap; gap: .6rem; margin: 0 0 1.5rem; }
 .rnb__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); }
 .rnb__side { padding: clamp(.75rem, 3vw, 2rem); min-width: 0; }
 .rnb__side + .rnb__side { border-left: 1px solid var(--line); }

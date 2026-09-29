@@ -26,6 +26,12 @@
 <article class="page rnb">
   <h1 class="page__title" data-split>{{ t('rnb_title') }}</h1>
   <p class="rnb__satire">{{ t('rnb_satire') }}</p>
+  <p class="rnb__share">
+    <button class="btn btn--pink share" type="button" hidden data-share-url="{{ site_url }}{{ url('/rnbbnb') }}" data-share-title="{{ t('rnb_title') }}">{{ t('share') }}</button>
+    <button class="btn btn--ghost share-img" type="button" hidden aria-label="{{ t('share_image_label') }}"
+      data-kind="meter" data-name="rnbbnb" data-title="{{ t('rnb_title') }}" data-kicker="{{ t('rnb_teaser_kicker') }}"
+      data-summary="{{ t('rnb_count_label')|capitalize }}" data-url="{{ site_url }}{{ url('/rnbbnb') }}">{{ t('share_image') }}</button>
+  </p>
   <div class="rnb__grid" data-src="{% if static %}/data/rnbbnb-{{ lang }}.json{% else %}/api/rnbbnb?lang={{ lang }}{% endif %}">
     {{ cell("rama", "RnB", t('rnb_rama'), data.rama) }}
     {{ cell("berisha", "BnB", t('rnb_berisha'), data.berisha) }}

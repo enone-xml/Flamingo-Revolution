@@ -382,7 +382,8 @@
   });
   showShare();
 
-  // "Image": build a picture of the story/digest on the device (script loaded on first use).
+  // "Instagram": build a story-size picture on the device (script loaded on first use)
+  // and copy the page link, since Instagram only takes links as a sticker.
   let imageLib = null;
   function loadImageLib() {
     if (!imageLib) imageLib = new Promise((resolve, reject) => {
@@ -401,17 +402,38 @@
     e.preventDefault();
     if (b.disabled) return;
     b.disabled = true; toast(I18N.image_making);
+    const copied = b.dataset.url ? copyText(b.dataset.url) : Promise.resolve(false); // while the tap still counts
     try {
       const lib = await loadImageLib();
       const d = { ...b.dataset };
       if (d.points) d.points = JSON.parse(d.points);
+      if (d.kind === "meter") d.sides = meterSides();
       const result = await lib.shareImage(d);
       if (result === "downloaded") toast(I18N.image_saved);
+      else if (result === "shared" && await copied) toast(I18N.image_shared);
       else $(".toast") && $(".toast").classList.remove("is-on");
     } catch (err) { console.warn("image failed", err); }
     finally { b.disabled = false; }
   });
   showImageButtons();
+
+  // The RnBBnB Meter's two cells as standalone SVG, at their real level.
+  function meterSides() {
+    return $$(".rnb__grid .rnb__side").map((side) => {
+      const svg = $(".rnb__cell", side).cloneNode(true);
+      const level = Number(side.dataset.level);
+      $$(".sec", svg).forEach((g) => { if (Number(g.dataset.lvl) > level) g.remove(); });
+      svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      svg.setAttribute("width", "600"); svg.setAttribute("height", "760");
+      return {
+        svg: new XMLSerializer().serializeToString(svg),
+        sign: $(".rnb__sign", side).firstChild.textContent.trim(),
+        name: $(".rnb__name", side).textContent.trim(),
+        total: $(".rnb__num", side).dataset.count,
+        side: side.dataset.side,
+      };
+    });
+  }
 
   // ------------------------------------------------------------ feed
   const cards = $(".cards");

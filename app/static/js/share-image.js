@@ -131,6 +131,38 @@
     footer(ctx, d.url);
   }
 
+  function loadSvg(markup) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(new Blob([markup], { type: "image/svg+xml" }));
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+      img.src = url;
+    });
+  }
+
+  // RnBBnB Meter: both cells side by side with their numbers.
+  function drawMeter(ctx, d, imgs) {
+    background(ctx);
+    header(ctx, d.kicker);
+    ctx.fillStyle = C.pink; ctx.font = "400 150px Anton, Impact, sans-serif";
+    ctx.fillText(d.title, PAD, 470);
+    const colW = (W - PAD * 2 - 40) / 2, cellH = colW * 380 / 300;
+    d.sides.forEach((s, i) => {
+      const x = PAD + i * (colW + 40), color = s.side === "berisha" ? C.green : C.pink;
+      ctx.drawImage(imgs[i], x, 540, colW, cellH);
+      ctx.fillStyle = color; ctx.font = "400 110px Anton, Impact, sans-serif";
+      ctx.fillText(s.sign, x, 540 + cellH + 130);
+      ctx.fillStyle = C.muted; ctx.font = "600 30px 'IBM Plex Sans', sans-serif";
+      ctx.fillText(s.name.toUpperCase(), x, 540 + cellH + 180);
+      ctx.fillStyle = color; ctx.font = "400 190px Anton, Impact, sans-serif";
+      ctx.fillText(String(s.total), x, 540 + cellH + 380);
+    });
+    ctx.fillStyle = C.soft; ctx.font = "400 32px 'IBM Plex Sans', sans-serif";
+    text(ctx, wrap(ctx, d.summary || "", W - PAD * 2, 2), PAD, H - 300, 42);
+    footer(ctx, d.url);
+  }
+
   async function make(d) {
     await Promise.all([
       document.fonts.load("400 64px Anton"),
@@ -140,7 +172,8 @@
     const canvas = document.createElement("canvas");
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext("2d");
-    (d.points ? drawDigest : drawStory)(ctx, d);
+    if (d.kind === "meter") drawMeter(ctx, d, await Promise.all(d.sides.map((s) => loadSvg(s.svg))));
+    else (d.points ? drawDigest : drawStory)(ctx, d);
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   }
 
