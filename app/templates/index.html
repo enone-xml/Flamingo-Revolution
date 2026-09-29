@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_rnb.html" as rnb with context %}
 {% from "_card.html" import card with context %}
 {% block title %}{{ t('seo_title_home') }}{% endblock %}
 {% block content %}
@@ -44,6 +45,25 @@
   </a>
 </section>
 
+{% if cells %}
+<a class="rnb-teaser" href="{{ url('/rnbbnb') }}">
+  <span class="rnb-teaser__head">
+    <span class="rnb-teaser__kicker">{{ t('rnb_teaser_kicker') }}</span>
+    <span class="rnb-teaser__title">{{ t('rnb_title') }}</span>
+  </span>
+  <span class="rnb-teaser__cells">
+    {% for key, sign, name in [('rama', 'RnB', t('rnb_rama')), ('berisha', 'BnB', t('rnb_berisha'))] %}
+    {% set d = cells[key] %}
+    <span class="rnb__side rnb__side--{{ key }} rnb-teaser__side" data-side="{{ key }}" data-level="{{ d.level }}">
+      {{ rnb.cell_svg(key, name, d) }}
+      <span class="rnb-teaser__sign">{{ sign }}</span>
+      <span class="rnb__num" data-count="{{ d.total }}">{{ d.total }}</span>
+    </span>
+    {% endfor %}
+  </span>
+  <span class="rnb-teaser__cta">{{ t('rnb_teaser_cta') }} →</span>
+</a>
+{% endif %}
 <section class="intro" aria-labelledby="intro-title">
   <h2 class="intro__title" id="intro-title" data-reveal>{{ t('intro_title') }}</h2>
   <div class="intro__body">
@@ -138,3 +158,4 @@
   {% endif %}
 </section>
 {% endblock %}
+{% block scripts %}{% if cells %}{{ rnb.i18n_json() }}{% endif %}{% endblock %}

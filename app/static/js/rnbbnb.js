@@ -2,12 +2,13 @@
    counts the numbers up, and checks for new accusations every minute. */
 (() => {
   "use strict";
+  // The full page (.rnb__grid) or the homepage teaser (.rnb-teaser).
   const grid = document.querySelector(".rnb__grid");
-  if (!grid) return;
+  if (!grid && !document.querySelector(".rnb-teaser")) return;
   const T = JSON.parse(document.getElementById("rnb-i18n").textContent);
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fmt = (str, vars) => str.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? vars[k] : ""));
-  const sides = Array.from(grid.querySelectorAll(".rnb__side"));
+  const sides = Array.from(document.querySelectorAll(".rnb__grid .rnb__side, .rnb-teaser .rnb__side"));
   const max = T.names.length;
 
   const secs = (side) => Array.from(side.querySelectorAll(".sec"));
@@ -48,6 +49,7 @@
     svg(side).setAttribute("aria-label", fmt(T.cell, {
       name: T.people[side.dataset.side], n: d.level, max, items: items.length ? items.join(", ") : T.open,
     }));
+    if (!side.querySelector("[data-week]")) return; // the homepage teaser shows only the number
     side.querySelector("[data-week]").textContent = fmt(T.week, { n: d.week });
     side.querySelector("[data-level-text]").textContent =
       fmt(T.level, { n: d.level, max }) + " · " + (d.next ? fmt(T.next, { n: d.next - d.total }) : T.maxed);
@@ -99,6 +101,6 @@
       });
     } catch (_) { /* offline: try again next time */ }
   }
-  setInterval(poll, 60000);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
+  if (grid) setInterval(poll, 60000); // the homepage refreshes as a whole
+  if (grid) document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
 })();

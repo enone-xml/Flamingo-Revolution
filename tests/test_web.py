@@ -238,6 +238,9 @@ def test_rnbbnb_counts_levels_and_page(client):
         r = client.get(p)
         assert r.status_code == 200 and "RnB" in r.text and "BnB" in r.text
         assert "rnbbnb.js" in r.text
+    home = client.get("/").text
+    assert "rnb-teaser" in home and "rnbbnb.js" in home
+    assert "rnb-teaser" not in client.get("/page/2").text
     assert client.get("/api/rnbbnb?lang=sq").json()["rama"]["total"] == 1
 
 

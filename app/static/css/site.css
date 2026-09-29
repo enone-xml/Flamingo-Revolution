@@ -605,6 +605,27 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
 .rnb__levels strong { display: inline-block; min-width: 3ch; color: var(--pink); }
 .rnb__checked { color: var(--muted); font-size: .85rem; }
 
+/* homepage teaser */
+.rnb-teaser { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 0 var(--gutter) 3rem; padding: 1.25rem; border: 2px solid var(--pink); background: var(--card); color: var(--text); text-decoration: none; position: relative; overflow: hidden; transition: transform .3s var(--ease), box-shadow .3s var(--ease); }
+.rnb-teaser:hover, .rnb-teaser:focus-visible { transform: rotate(-.6deg) translateY(-3px); box-shadow: 8px 8px 0 var(--pink); }
+.rnb-teaser:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+.rnb-teaser__kicker { display: block; color: var(--muted); font: 600 .75rem/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; }
+.rnb-teaser__title { display: block; font: 400 clamp(2.2rem, 8vw, 3.6rem)/1 var(--display); color: var(--pink); }
+.rnb-teaser__cells { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.rnb-teaser__side { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 0 .6rem; padding: 0; }
+.rnb-teaser__side .rnb__cell { grid-column: 1 / -1; max-width: 190px; margin: 0 auto .4rem; }
+.rnb-teaser__sign { font: 400 1.6rem/1 var(--display); color: var(--accent); }
+.rnb-teaser .rnb__num { font-size: clamp(2.2rem, 9vw, 3.4rem); text-align: right; }
+.rnb-teaser__cta { justify-self: start; padding: .5rem .9rem; background: var(--pink); color: var(--bg); font-weight: 700; border-radius: 999px; transition: transform .25s var(--ease); }
+.rnb-teaser:hover .rnb-teaser__cta { transform: translateX(6px); }
+.motion .rnb-teaser:hover .rnb__cell { animation: rnb-rattle .5s ease-in-out; }
+@keyframes rnb-rattle { 20% { transform: rotate(-2deg); } 40% { transform: rotate(2deg); } 60% { transform: rotate(-1deg); } 80% { transform: rotate(1deg); } }
+@media (min-width: 960px) {
+  .rnb-teaser { grid-template-columns: 1fr 1.4fr; align-items: center; margin: 0 auto 4rem; max-width: 1100px; padding: 2rem 2.5rem; }
+  .rnb-teaser__cta { grid-column: 1; }
+  .rnb-teaser__cells { grid-column: 2; grid-row: 1 / span 2; }
+}
+
 /* the build-up: site.js-free, driven by rnbbnb.js adding .play */
 .motion .c-fig { animation: rnb-idle 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
 @keyframes rnb-idle { 50% { transform: scaleY(.985) translateY(1px); } }
@@ -657,7 +678,7 @@ html.menu-open { overflow: hidden; } /* on html, so the sticky header keeps work
   .topbar.is-hidden { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
-@media (prefers-reduced-motion: reduce) { .rnb__cell *, .rnb__cell.shake, .rnb__num.bump { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .rnb__cell, .rnb__cell *, .rnb__cell.shake, .rnb__num.bump { animation: none !important; } .rnb-teaser, .rnb-teaser:hover, .rnb-teaser__cta { transform: none !important; } }
 
 /* ---------------------------------------------------------------- page transitions (native) */
 /* Browsers with cross-document View Transitions animate between pages themselves;

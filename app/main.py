@@ -178,6 +178,7 @@ def home(request: Request, ui: str, tag=None, source=None, src_lang=None, rng="7
         st = feed.stats(conn, len(source_list()))
         ticker = feed.latest(conn, ui, 5)
         sources = feed.source_names(conn)
+        cells = accuse.counts(conn, ui, recent=0) if page == 1 else None
     if page > 1 and not data["groups"]:
         raise HTTPException(status_code=404)  # past the last page
     filtered = bool(tag or source or src_lang or q or rng != "7d")
@@ -186,7 +187,7 @@ def home(request: Request, ui: str, tag=None, source=None, src_lang=None, rng="7
         request, "index.html", ui, "home", path,
         data=data, stats=st, ticker=ticker, sources=sources, tags=ai.TAGS, latest_digest=latest_digest,
         protest_day=feed.protest_day(), protest_start=config.PROTEST_START, filtered=filtered,
-        max_feed_pages=config.MAX_FEED_PAGES,
+        max_feed_pages=config.MAX_FEED_PAGES, cells=cells, **rnb_labels(ui),
         filters={"tag": tag, "source": source, "lang": src_lang, "range": rng, "q": q},
     )
 
@@ -317,8 +318,11 @@ def digest_page(request: Request, ui: str):
 def rnbbnb_page(request: Request, ui: str):
     with db.session() as conn:
         data = accuse.counts(conn, ui)
-    names = i18n.t(ui, "rnb_level_names").split("|")
-    return render(request, "rnbbnb.html", ui, "rnbbnb", "/rnbbnb", data=data, level_names=names)
+    return render(request, "rnbbnb.html", ui, "rnbbnb", "/rnbbnb", data=data, **rnb_labels(ui))
+
+
+def rnb_labels(ui: str) -> dict:
+    return {"level_names": i18n.t(ui, "rnb_level_names").split("|"), "levels_count": len(accuse.LEVELS)}
 
 
 # ---------------------------------------------------------------- RSS
