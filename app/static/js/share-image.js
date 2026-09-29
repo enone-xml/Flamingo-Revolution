@@ -168,16 +168,17 @@
     const colW = (W - PAD * 2 - 40) / 2, cellH = colW * 380 / 300;
     d.sides.forEach((s, i) => {
       const x = PAD + i * (colW + 40), color = s.side === "berisha" ? C.blue : C.pink;
-      ctx.drawImage(imgs[i], x, 540, colW, cellH);
+      const top = 520 + cellH;
+      ctx.drawImage(imgs[i], x, 520, colW, cellH);
       ctx.fillStyle = color; ctx.font = "400 110px Anton, Impact, sans-serif";
-      ctx.fillText(s.sign, x, 540 + cellH + 130);
+      ctx.fillText(s.sign, x, top + 115);
       ctx.fillStyle = C.muted; ctx.font = "600 30px 'IBM Plex Sans', sans-serif";
-      ctx.fillText(s.name.toUpperCase(), x, 540 + cellH + 180);
-      ctx.fillStyle = color; ctx.font = "400 190px Anton, Impact, sans-serif";
-      ctx.fillText(String(s.total), x, 540 + cellH + 345);
+      ctx.fillText(s.name.toUpperCase(), x, top + 160);
+      ctx.fillStyle = color; ctx.font = "400 170px Anton, Impact, sans-serif";
+      ctx.fillText(String(s.total), x, top + 380);
     });
     ctx.fillStyle = C.soft; ctx.font = "400 34px 'IBM Plex Sans', sans-serif";
-    text(ctx, wrap(ctx, d.summary || "", W - PAD * 2, 3), PAD, H - 390, 46);
+    text(ctx, wrap(ctx, d.summary || "", W - PAD * 2, 3), PAD, H - 375, 46);
     footer(ctx, d.url);
   }
 
