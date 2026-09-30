@@ -13,6 +13,8 @@
 #   enabled  - set to false to pause a source without deleting it
 #   every    - fetch only every N minutes (default: every run). Used for big
 #              feeds and international feeds that rarely mention Albania.
+#   filter   - "none" to skip the keyword filter, for sources that are all on
+#              topic (the AI still checks each item)
 
 sources:
   # --- Albanian outlets, Albanian language ---
@@ -29,6 +31,8 @@ sources:
   - {name: Reporter.al, url: "https://www.reporter.al/feed/", lang: sq, country: AL}
   - {name: Vizion Plus, url: "https://www.vizionplus.tv/feed/", lang: sq, country: AL}
   - {name: Radio Evropa e Lirë, url: "https://www.evropaelire.org/api/", lang: sq, country: AL}
+  # The movement's own news site (added 2026-09-30 at Eno's request; tested: valid RSS, robots.txt allows it)
+  - {name: Flamingo Revolution, url: "https://flamingorevolution.eu/news/rss.xml", lang: sq, country: AL, filter: none}
 
   # --- Albanian outlets, English language ---
   - {name: Euronews Albania (EN), url: "https://euronews.al/en/feed/", lang: en, country: AL}

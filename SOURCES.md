@@ -24,6 +24,7 @@ docker run --rm -i -v "$PWD/scripts:/s" python:3.12-slim sh -c "pip install -q f
 | News24 | sq | https://www.news24.al/feed/ | 10 | 2 Sep (slow feed, kept) |
 | Panorama | sq | https://www.panorama.com.al/feed/ | 4 | 25 Sep (slow feed, kept) |
 | Radio Evropa e Lirë (RFE/RL) | sq | https://www.evropaelire.org/api/ | 20 | today |
+| Flamingo Revolution (added 2026-09-30, no keyword filter) | sq | https://flamingorevolution.eu/news/rss.xml | 22 | yesterday |
 | Reporter.al (BIRN Albania) | sq | https://www.reporter.al/feed/ | 10 | today |
 | Tirana Times | en | https://www.tiranatimes.com/feed/ | 11 | 24 Sep |
 | Vizion Plus | sq | https://www.vizionplus.tv/feed/ | 10 | today |

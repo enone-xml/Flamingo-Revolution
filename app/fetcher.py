@@ -163,7 +163,7 @@ def _record_error(conn, name, url, message):
 
 
 def store_entries(conn, entries, source_name: str, lang: str, country: str,
-                  source_from_entry: bool = False) -> tuple[int, int]:
+                  source_from_entry: bool = False, keyword_filter: bool = True) -> tuple[int, int]:
     """Filter and insert feed entries. Returns (new, skipped_by_keyword)."""
     now = datetime.now(timezone.utc)
     new = skipped = 0
@@ -176,7 +176,7 @@ def store_entries(conn, entries, source_name: str, lang: str, country: str,
         if now - published > MAX_AGE:
             continue
         snippet = clean_text(e.get("summary", ""), 600)
-        if country != "SEARCH" and not keywords.is_candidate(title, snippet, country):
+        if keyword_filter and country != "SEARCH" and not keywords.is_candidate(title, snippet, country):
             skipped += 1
             continue
         url = normalize_url(link)
@@ -239,7 +239,9 @@ def fetch_feed(conn, client: PoliteClient, src: dict) -> int:
     if not parsed.entries:
         _record_error(conn, name, url, "no entries in feed")
         return 0
-    new, skipped = store_entries(conn, parsed.entries, name, src.get("lang", "sq"), src.get("country", "INT"))
+    # filter: none = every item is on topic (the movement's own site); the AI still checks.
+    new, skipped = store_entries(conn, parsed.entries, name, src.get("lang", "sq"), src.get("country", "INT"),
+                                 keyword_filter=src.get("filter") != "none")
     _record_ok(conn, name, url, resp, new)
     log.info("feed %-28s entries=%3d new=%2d filtered_out=%3d", name, len(parsed.entries), new, skipped)
     return new
