@@ -15,6 +15,8 @@
 #              feeds and international feeds that rarely mention Albania.
 #   filter   - "none" to skip the keyword filter, for sources that are all on
 #              topic (the AI still checks each item)
+#   always   - true to show every post, even essays and columns the AI wouldn't
+#              count as news, and to keep numbered series parts that look alike
 
 sources:
   # --- Albanian outlets, Albanian language ---
@@ -32,7 +34,7 @@ sources:
   - {name: Vizion Plus, url: "https://www.vizionplus.tv/feed/", lang: sq, country: AL}
   - {name: Radio Evropa e Lirë, url: "https://www.evropaelire.org/api/", lang: sq, country: AL}
   # The movement's own news site (added 2026-09-30 at Eno's request; tested: valid RSS, robots.txt allows it)
-  - {name: Flamingo Revolution, url: "https://flamingorevolution.eu/news/rss.xml", lang: sq, country: AL, filter: none}
+  - {name: Flamingo Revolution, url: "https://flamingorevolution.eu/news/rss.xml", lang: sq, country: AL, filter: none, always: true}
 
   # --- Albanian outlets, English language ---
   - {name: Euronews Albania (EN), url: "https://euronews.al/en/feed/", lang: en, country: AL}

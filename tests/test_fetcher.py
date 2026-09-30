@@ -98,3 +98,15 @@ def test_every_minutes_skips_until_due(tmp_path):
     conn.execute("UPDATE feed_status SET last_ok_at = strftime('%Y-%m-%dT%H:%M:%SZ','now','-31 minutes')")
     assert fetcher.is_due(conn, src)
     assert fetcher.is_due(conn, {"name": "Big", "url": "u"})  # no interval: always
+
+
+def test_always_source_keeps_series_parts_and_is_in_the_sources_file(tmp_path):
+    from datetime import datetime, timezone
+    from app import ai, db, fetcher
+    assert "Flamingo Revolution" in fetcher.always_shown()
+    now = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000")
+    entries = [{"title": f"QEVERIA E SYLESHËVE {n}", "link": f"https://flamingorevolution.eu/n/{n}",
+                "published": now, "summary": "ese"} for n in ("VI", "VII")]
+    with db.session(str(tmp_path / "t.db")) as conn:
+        assert fetcher.store_entries(conn, entries, "X", "sq", "AL", keyword_filter=False, fuzzy_dedup=False) == (2, 0)
+    assert "movement's own site" in ai.build_prompt({"source": "X", "lang": "sq", "title": "t", "snippet": None}, [], True)

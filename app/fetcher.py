@@ -71,10 +71,18 @@ def iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def is_duplicate(conn, url: str, title_norm: str, published: datetime) -> bool:
+def always_shown() -> set[str]:
+    """Sources marked `always: true`: every post appears, even essays and columns."""
+    try:
+        return {s["name"] for s in load_sources()[0] if s.get("always")}
+    except Exception:
+        return set()
+
+
+def is_duplicate(conn, url: str, title_norm: str, published: datetime, fuzzy: bool = True) -> bool:
     if conn.execute("SELECT 1 FROM articles WHERE url = ?", (url,)).fetchone():
         return True
-    if not title_norm:
+    if not title_norm or not fuzzy:  # e.g. a series "Part VI" / "Part VII" isn't a duplicate
         return False
     if conn.execute("SELECT 1 FROM articles WHERE title_norm = ?", (title_norm,)).fetchone():
         return True
@@ -163,7 +171,8 @@ def _record_error(conn, name, url, message):
 
 
 def store_entries(conn, entries, source_name: str, lang: str, country: str,
-                  source_from_entry: bool = False, keyword_filter: bool = True) -> tuple[int, int]:
+                  source_from_entry: bool = False, keyword_filter: bool = True,
+                  fuzzy_dedup: bool = True) -> tuple[int, int]:
     """Filter and insert feed entries. Returns (new, skipped_by_keyword)."""
     now = datetime.now(timezone.utc)
     new = skipped = 0
@@ -181,7 +190,7 @@ def store_entries(conn, entries, source_name: str, lang: str, country: str,
             continue
         url = normalize_url(link)
         title_norm = normalize_title(title)
-        if is_duplicate(conn, url, title_norm, published):
+        if is_duplicate(conn, url, title_norm, published, fuzzy=fuzzy_dedup):
             continue
         name = source_name
         if source_from_entry:
@@ -241,7 +250,7 @@ def fetch_feed(conn, client: PoliteClient, src: dict) -> int:
         return 0
     # filter: none = every item is on topic (the movement's own site); the AI still checks.
     new, skipped = store_entries(conn, parsed.entries, name, src.get("lang", "sq"), src.get("country", "INT"),
-                                 keyword_filter=src.get("filter") != "none")
+                                 keyword_filter=src.get("filter") != "none", fuzzy_dedup=not src.get("always"))
     _record_ok(conn, name, url, resp, new)
     log.info("feed %-28s entries=%3d new=%2d filtered_out=%3d", name, len(parsed.entries), new, skipped)
     return new

@@ -82,12 +82,21 @@ def recent_story_keys(conn, limit: int = 15) -> list[str]:
     return [r["story_key"] for r in rows]
 
 
-def build_prompt(article, keys: list[str]) -> str:
+ALWAYS_NOTE = ("\nNote: this source is the Flamingo Revolution movement's own site. Set relevant to true "
+               "and write titles and summaries as usual, even for essays, columns or satire "
+               "(summarise what the piece says, attributed to its author or the site). "
+               "Translate THIS headline faithfully and ignore the recent keys for the titles. Keep invented "
+               "names as they are (\"Qeveria e Syleshëve\" is \"The Syleshë Government\" in English), and keep "
+               "part numbers. Each piece stands alone: return an empty story_key.")
+
+
+def build_prompt(article, keys: list[str], always: bool = False) -> str:
     return (
         f"Recent keys: {', '.join(keys) or '-'}\n"
         f"Source: {article['source']} ({article['lang']})\n"
         f"Headline: {article['title']}\n"
         f"Teaser: {(article['snippet'] or '-')[:350]}"
+        + (ALWAYS_NOTE if always else "")
     )
 
 
@@ -212,6 +221,8 @@ def process_pending(db_path: str | None = None, backend=None, limit: int | None 
         # New articles first; spare capacity goes to catching up on headline-only ones.
         queue = [(art, False) for art in rows]
         queue += [(art, True) for art in _catchup_rows(conn, limit - len(rows))]
+        from .fetcher import always_shown
+        always = always_shown()
         for art, catchup in queue:
             # Budget guard: stop before a call that would take us over the limit.
             spent = month_spend(conn)
@@ -220,7 +231,7 @@ def process_pending(db_path: str | None = None, backend=None, limit: int | None 
                 stats["keyword_only"] += _mark_keyword_only(conn, f"monthly budget reached (${spent:.2f})")
                 break
             try:
-                prompt = build_prompt(art, recent_story_keys(conn))
+                prompt = build_prompt(art, recent_story_keys(conn), art["source"] in always)
                 data, tin, tout = backend.call(prompt)
                 if data.get("relevant") and not (str(data.get("summary_en", "")).strip()
                                                  and str(data.get("summary_sq", "")).strip()):
@@ -251,6 +262,8 @@ def process_pending(db_path: str | None = None, backend=None, limit: int | None 
                 stats["failed"] += 1
                 continue
             res = clean_result(data)
+            if art["source"] in always:
+                res["relevant"] = 1
             conn.execute(
                 """UPDATE articles SET ai_status = 'done', ai_attempts = ai_attempts + 1,
                    relevant = :relevant, title_en = :title_en, title_sq = :title_sq,
